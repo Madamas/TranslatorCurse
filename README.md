@@ -1,0 +1,2 @@
+# TranslatorCurse
+My Little CurseWork
