@@ -1,0 +1,8 @@
+*.beam
+*.asm
+*.exe
+*.obj
+*.doc
+*.odt
+*.pdf
+*.dump
