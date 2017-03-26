@@ -1,8 +1,10 @@
 *.beam
 *.asm
 *.exe
+*.EXE
 *.obj
 *.doc
 *.odt
 *.pdf
 *.dump
+*.lst
