@@ -4,6 +4,7 @@ defmodule MyCurse do
 		path = IO.gets "what\'s the path "
 		path = Regex.replace(~r/\n/,path,"")
 		lex = file path
+		IO.inspect lex, label: "lex before"
 		lex = Dictionary.addProp(lex)
 		lex
 	end

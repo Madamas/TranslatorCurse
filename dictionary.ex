@@ -21,17 +21,17 @@ defmodule Dictionary do
 			kek = kek -- ["not"]
 			num = Enum.count kek
 			case num do
-				1 -> [kek]
+				1 -> kek
 				_ ->
 				case checkType(x.name) do
 					:hex -> %{x | size: "0", type: "hexadecimal"}
-					:identifier -> %{x | size: "4", type: "identifier"}
+					:identifier -> [%{x | size: "4", type: "identifier"}]
 					:wrong_lexem -> %{x | size: "0", type: "wrong_lexem"}				
 				end
 			end
 		end
 	end
-	list = Enum.reject(list,fn x -> x == nil  end) 
+	#list = Enum.reject(list,fn x -> x == nil  end) 
 	list
 	end
 	defp file(path) do
