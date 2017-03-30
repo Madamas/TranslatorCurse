@@ -1,9 +1,8 @@
 defmodule Dictionary do
 	def addProp(list) do
-	path = Regex.replace(~r/\n/,"dict.md","")
-	dict = file path
-	dict = dict ++ [%{name: " ",type: "single_char", size: "1"}]
-	dict = dict ++ [%{name: ",",type: "single_char", size: "1"}]
+	dict = file("dict.md")
+	|> Kernel.++([%{name: " ",type: "single_char", size: "1"}])
+	|> Kernel.++([%{name: ",",type: "single_char", size: "1"}])
 	list = Enum.map list, fn str ->
 		Enum.map str, fn [x]->
 			kek = "not"
@@ -24,14 +23,13 @@ defmodule Dictionary do
 				1 -> kek
 				_ ->
 				case checkType(x.name) do
-					:hex -> %{x | size: "0", type: "hexadecimal"}
+					:hex -> [%{x | size: "0", type: "hexadecimal"}]
 					:identifier -> [%{x | size: "4", type: "identifier"}]
-					:wrong_lexem -> %{x | size: "0", type: "wrong_lexem"}				
+					:wrong_lexem -> [%{x | size: "0", type: "wrong_lexem"}]
 				end
 			end
 		end
 	end
-	#list = Enum.reject(list,fn x -> x == nil  end) 
 	list
 	end
 	defp file(path) do
@@ -49,7 +47,7 @@ defmodule Dictionary do
 			lex
 			_ ->
 				string = Regex.replace(~r/\n/,string,"", global: true)
-				string = Regex.split(~r{;},string)
+				|> (&Regex.split(~r{;},&1)).()
 				lex = stringHandle(string,lex)
 				fileHandle(pid,lex)
 		end
@@ -86,14 +84,16 @@ defmodule Dictionary do
 	defp checkType(string) do
 		base = byte_size(string)-1
 		last = binary_part(string,base,byte_size(string)-base)
-		list = String.codepoints string
-		list = List.delete_at list,String.length(string)-1
+		list = String.codepoints(string)
+		|> (&List.delete_at(&1,(String.length(string)-1))).()
 		if checkFst(String.codepoints(string)) do
 			case last do
 				"h" -> if checkHex(list) do
 					:hex
+				else
+					:wrong_lexem
 				end
-				_ -> :identifier
+				_ ->:identifier
 			end
 		else
 			case last do

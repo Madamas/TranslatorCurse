@@ -1,7 +1,7 @@
 .386; asdadsfasdfsadf ; ;
 Data Segment
 vars db "dbstring"
-ddVar dd 13f12423h
+ddVar dd .13f12423h
 dwvar dw 23h
 kvar = 1fh
 Data ends
@@ -12,8 +12,8 @@ Code Segment
 	cmp eax, [esi+edi*4+8]
 	jcxz short lable
 	xor byte ptr [eax+ebx*2+4], kvar
-	xor ddvar, 22h
 	mov eax, 22h
+	mov kvar, 25h
 	mov ah, kvar
 	cmp eax, kvar[eax]
 	jcxz near ptr labl1
@@ -23,6 +23,7 @@ Code Segment
 	mov bl,al
 	idiv al
 	xchg byte ptr [ebx*4+eax+6], al
+	xchg byte ptr [ebx*4+eax+6], ecx
 	idiv eax
 	lable:
 	int 21h
