@@ -73,6 +73,17 @@ defmodule Dictionary do
 			false
 		end
 	end
+	defp checkId([]) do
+		true
+	end
+	defp checkId([head|tail]) do
+		illegal = ["@","_","!","?","&","."]
+		if head in illegal do
+			false
+		else
+			checkId(tail)
+		end
+	end
 	#just pass String.codepoints(string)
 	#check if first symbol is letter
 	defp checkFst([head|_tail]) do
@@ -93,14 +104,26 @@ defmodule Dictionary do
 				else
 					:wrong_lexem
 				end
-				_ ->:identifier
+				_ ->
+				if checkId(list) do
+					:identifier
+				else
+					:wrong_lexem
+				end
 			end
 		else
 			case last do
 			   "h" -> if checkHex(list) do
 					 :hex
+				else
+					:identifier
 				end
-				_ -> :wrong_lexem			    
+				_ -> 
+					if checkId(list) do
+						:identifier
+					else
+						:wrong_lexem
+					end			    
 			end
 		end
 	end

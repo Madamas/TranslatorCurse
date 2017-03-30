@@ -1,4 +1,4 @@
-".386" identifier
+".386" wrong_lexem
 
 "data" identifier
 " " single_char
@@ -57,9 +57,9 @@
 "+" single_char
 "edi" reg32
 "*" single_char
-"4" wrong_lexem
+"4" identifier
 "+" single_char
-"8" wrong_lexem
+"8" identifier
 "]" single_char
 
 "jcxz" command
@@ -79,9 +79,9 @@
 "+" single_char
 "ebx" reg32
 "*" single_char
-"2" wrong_lexem
+"2" identifier
 "+" single_char
-"4" wrong_lexem
+"4" identifier
 "]" single_char
 "," single_char
 " " single_char
@@ -159,11 +159,11 @@
 "[" single_char
 "ebx" reg32
 "*" single_char
-"4" wrong_lexem
+"4" identifier
 "+" single_char
 "eax" reg32
 "+" single_char
-"6" wrong_lexem
+"6" identifier
 "]" single_char
 "," single_char
 " " single_char
@@ -178,11 +178,11 @@
 "[" single_char
 "ebx" reg32
 "*" single_char
-"4" wrong_lexem
+"4" identifier
 "+" single_char
 "eax" reg32
 "+" single_char
-"6" wrong_lexem
+"6" identifier
 "]" single_char
 "," single_char
 " " single_char
