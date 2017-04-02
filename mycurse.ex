@@ -41,7 +41,9 @@ defmodule MyCurse do
 	end
 	defp stringHandle([head|_tail],lex) do
 		str = Regex.replace(~r/\"/,head,"", global: true)
-		|> (&Regex.split(~r{(\[|\]|\+|\*|\ |\,)},&1, include_captures: true, trim: true)).()
+		|> (&Regex.split(~r{(\[|\]|\+|\*|\,|\=)},&1, include_captures: true, trim: true)).()
+		|> (&for x <- &1, do: Regex.split(~r{\ },x,trim: true)).()
+		|> List.flatten()
 		|> Enum.map(fn x -> [%{name: String.downcase(x),type: :unknown,size: "size"}] end)
 		lex ++ [str]
 	end

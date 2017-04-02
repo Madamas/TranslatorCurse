@@ -1,4 +1,4 @@
-.386; asdadsfasdfsadf ; ;
+.386; asdadsfasdfsadf
 Data Segment
 vars db "dbstring"
 ddVar dd .13f12423h
@@ -15,7 +15,7 @@ Code Segment
 	mov eax, 22h
 	mov kvar, 25h
 	mov ah, kvar
-	cmp eax, kvar[eax]
+	;cmp eax, kvar[eax]
 	jcxz near ptr labl1
 	idiv bh
 	mov ebx,eax
@@ -29,3 +29,7 @@ Code Segment
 	int 21h
 Code ends
 end
+; : is divider
+; space isn't divider
+; db and near/far aren't the same
+; const char add

@@ -1,7 +1,6 @@
 defmodule Dictionary do
 	def addProp(list) do
 	dict = file("dict.md")
-	|> Kernel.++([%{name: " ",type: "single_char", size: "1"}])
 	|> Kernel.++([%{name: ",",type: "single_char", size: "1"}])
 	list = Enum.map list, fn str ->
 		Enum.map str, fn [x]->
