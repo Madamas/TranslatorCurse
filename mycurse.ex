@@ -4,14 +4,18 @@ defmodule MyCurse do
 		lex = Regex.replace(~r/\n/,path,"")
 		|>file()
 		|>Dictionary.addProp
+		what = Syntax.checkSyntax lex
 		sendMidData lex
 		lex
+		what
 	end
 	defp sendMidData(what) do
 		{:ok, opid} = File.open "out.md",[:write]
 		Enum.map what, fn str ->
-			Enum.map str, fn [x] ->
-				IO.write opid, "\"#{x.name}\""<>" "<>x.type<>"\n"
+			#IO.inspect str,label: "INTERMEDIATE"
+			Enum.map str, fn x ->
+				#IO.inspect x, label: "INSIDE"
+				IO.write opid, "#{x.name}"<>" "<>x.type<>"\n"
 			end
 			IO.puts opid, ""
 		end
@@ -40,11 +44,15 @@ defmodule MyCurse do
 
 	end
 	defp stringHandle([head|_tail],lex) do
-		str = Regex.replace(~r/\"/,head,"", global: true)
-		|> (&Regex.split(~r{(\[|\]|\+|\*|\,|\=)},&1, include_captures: true, trim: true)).()
+		#\[|\]|\+|\*| just in case if you need this in future (don't forget to add this into regex)
+		str = Regex.split(~r{(\,|\=)},head, include_captures: true, trim: true)
 		|> (&for x <- &1, do: Regex.split(~r{\ },x,trim: true)).()
 		|> List.flatten()
-		|> Enum.map(fn x -> [%{name: String.downcase(x),type: :unknown,size: "size"}] end)
-		lex ++ [str]
+		|> Enum.map(fn x -> %{name: String.downcase(x),type: :unknown,size: "size"} end)
+		if (str == []) do
+			lex
+		else
+			lex ++ [str]
+		end
 	end
 end

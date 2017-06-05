@@ -1,9 +1,9 @@
 defmodule Dictionary do
 	def addProp(list) do
 	dict = file("dict.md")
-	|> Kernel.++([%{name: ",",type: "single_char", size: "1"}])
+	|> Kernel.++([%{name: ",",type: "divider", size: "1"}])
 	list = Enum.map list, fn str ->
-		Enum.map str, fn [x]->
+		Enum.map str, fn x->
 			kek = "not"
 			kek = Enum.map dict, fn y->
 				if x.name == y.name do
@@ -19,12 +19,17 @@ defmodule Dictionary do
 			kek = kek -- ["not"]
 			num = Enum.count kek
 			case num do
-				1 -> kek
+				1 -> #IO.inspect kek,label: "IN DICTIONARY" 
+					List.first(kek)
 				_ ->
 				case checkType(x.name) do
-					:hex -> [%{x | size: "0", type: "hexadecimal"}]
-					:identifier -> [%{x | size: "4", type: "identifier"}]
-					:wrong_lexem -> [%{x | size: "0", type: "wrong_lexem"}]
+					:hex -> %{x | size: "0", type: "hexadecimal"}
+					:identifier -> %{x | size: "4", type: "identifier"}
+					:wrong_lexem -> %{x | size: "0", type: "wrong_lexem"}
+					:string -> 	%{x | size: "#{(String.length(x.name)-2)*2}", type: "string"}
+					:label -> %{x | size: "0", type: "label"}
+					:equation -> %{x | size: "0", type: "equation"}
+					:nil -> %{x | size: "0", type: "wrong_lexem"}
 				end
 			end
 		end
@@ -76,7 +81,7 @@ defmodule Dictionary do
 		true
 	end
 	defp checkId([head|tail]) do
-		illegal = ["@","_","!","?","&","."]
+		illegal = ["@","_","!","?","&",".","[","]"]
 		if head in illegal do
 			false
 		else
@@ -94,6 +99,7 @@ defmodule Dictionary do
 	defp checkType(string) do
 		base = byte_size(string)-1
 		last = binary_part(string,base,byte_size(string)-base)
+		fst = binary_part(string,0,1)
 		list = String.codepoints(string)
 		|> (&List.delete_at(&1,(String.length(string)-1))).()
 		if checkFst(String.codepoints(string)) do
@@ -103,6 +109,13 @@ defmodule Dictionary do
 				else
 					:wrong_lexem
 				end
+				"]"-> if (fst == "[") do
+				:equation
+				end
+				"\""->
+				:string
+				":"->
+				:label
 				_ ->
 				if checkId(list) do
 					:identifier
@@ -117,6 +130,8 @@ defmodule Dictionary do
 				else
 					:identifier
 				end
+				":"->
+				:label
 				_ -> 
 					if checkId(list) do
 						:identifier
