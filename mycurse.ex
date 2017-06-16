@@ -4,10 +4,12 @@ defmodule MyCurse do
 		lex = Regex.replace(~r/\n/,path,"")
 		|>file()
 		|>Dictionary.addProp
-		what = Syntax.checkSyntax lex
+		{lex,pid} = Dictionary.make_const lex
+		lex = Dictionary.const_correct lex,pid
 		sendMidData lex
-		lex
-		what
+		what = Syntax.check_syntax(lex)
+		#lex
+		#what
 	end
 	defp sendMidData(what) do
 		{:ok, opid} = File.open "out.md",[:write]

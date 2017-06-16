@@ -19,8 +19,7 @@ defmodule Dictionary do
 			kek = kek -- ["not"]
 			num = Enum.count kek
 			case num do
-				1 -> #IO.inspect kek,label: "IN DICTIONARY" 
-					List.first(kek)
+				1 -> List.first(kek)
 				_ ->
 				case checkType(x.name) do
 					:hex -> %{x | size: "0", type: "hexadecimal"}
@@ -29,12 +28,94 @@ defmodule Dictionary do
 					:string -> 	%{x | size: "#{(String.length(x.name)-2)*2}", type: "string"}
 					:label -> %{x | size: "0", type: "label"}
 					:equation -> %{x | size: "0", type: "equation"}
+					:prefix -> %{x | size: "0", type: "prefix"}
 					:nil -> %{x | size: "0", type: "wrong_lexem"}
 				end
 			end
 		end
 	end
 	list
+	end
+	def make_const(lex)do
+		pid = Bucket.start_link
+		lex = Enum.map lex, fn(string)->
+			case length(string)do
+				2-> [first|[second]] = string
+				if(first.type == "identifier" && second.type == "segment")do
+					[%{first | type: "seg_identifier"},second]
+				else
+					string
+				end
+				3-> [first|[second|[third]]] = string
+				if(first.type == "identifier" && second.type == "directive" && (third.type == "hexadecimal" || third.type == "string"))do
+					[%{first | type: "const"},second,third]
+				else
+					string
+				end
+				_->string
+			end
+		end
+		Enum.map lex,fn(string)->
+			case (length(string))do
+				1-> [one] = string
+				if(one.type == "label")do
+					base = byte_size(one.name)-1
+					name = binary_part(one.name, 0, base)
+					Bucket.put(pid,one.type,{name,one})
+				end
+				2->[first|[second]] = string
+					if(first.type == "seg_identifier")do
+						Bucket.put(pid,first.type,first.name)
+					end
+				3->[first|[second|[third]]] = string
+					case first.type do
+						"identifier"-> Bucket.put(pid,first.type,{first.name,third})
+						"const"-> Bucket.put(pid,first.type,{first.name,third})
+					end
+				_->
+			end
+		end
+		{lex,pid}
+	end
+	def const_correct(lex,pid)do
+		list = Bucket.get(pid,"const")
+		llist = Bucket.get(pid,"label")
+		lnames = Enum.map llist, fn(x)->
+			{_,{name,_}} = x
+			name
+		end
+		names = Enum.map list, fn(x)->
+			{_,{name,_}} = x
+			name
+		end
+		lex = Enum.map lex, fn(string)->
+			Enum.map string,fn(x)->
+				if(x.type == "identifier")do
+					IO.inspect x.name
+					IO.inspect names
+					if(x.name in names)do
+						IO.inspect %{name: x.name,type: "const",size: x.size}
+					else
+						x
+					end
+				else
+					x
+				end
+			end
+		end
+		Enum.map lex, fn(string)->
+			Enum.map string,fn(x)->
+				if(x.type == "identifier")do
+					if(x.name in lnames)do
+						%{x| type: "label"}
+					else
+						x
+					end
+				else
+					x
+				end
+			end
+		end
 	end
 	defp file(path) do
 		{atom, pid} = File.open path,[:utf8]
@@ -100,17 +181,28 @@ defmodule Dictionary do
 		base = byte_size(string)-1
 		last = binary_part(string,base,byte_size(string)-base)
 		fst = binary_part(string,0,1)
+		seg = binary_part(string,0,2)
 		list = String.codepoints(string)
+		hex = String.codepoints(binary_part(string, 0, base))
+		if (length(list)>4) do
+		mid = binary_part(string, 2, 2)
+		else
+		mid = "wut"
+		end
+		seg_list = ["cs","ds","ss","es","fs","gs"]
 		|> (&List.delete_at(&1,(String.length(string)-1))).()
 		if checkFst(String.codepoints(string)) do
 			case last do
-				"h" -> if checkHex(list) do
+				"h" -> if checkHex(hex) do
 					:hex
 				else
 					:wrong_lexem
 				end
 				"]"-> if (fst == "[") do
 				:equation
+				else if ((seg in seg_list) && (mid == ":[")) do
+				:prefix
+				end
 				end
 				"\""->
 				:string
@@ -125,7 +217,7 @@ defmodule Dictionary do
 			end
 		else
 			case last do
-			   "h" -> if checkHex(list) do
+			   "h" -> if checkHex(hex) do
 					 :hex
 				else
 					:identifier

@@ -38,7 +38,6 @@ dw,size_type,0
 near,len_type,0
 short,len_type,0
 byte,size_type,0
-word,size_type,0
 dword,size_type,0
 ptr,operator,0
 :,divider,0
