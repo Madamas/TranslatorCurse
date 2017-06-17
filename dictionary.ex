@@ -71,6 +71,7 @@ defmodule Dictionary do
 					case first.type do
 						"identifier"-> Bucket.put(pid,first.type,{first.name,third})
 						"const"-> Bucket.put(pid,first.type,{first.name,third})
+						_-> :nil
 					end
 				_->
 			end

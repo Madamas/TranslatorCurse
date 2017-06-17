@@ -109,6 +109,11 @@ int command
 int command
 lable label
 
+mov command
+al reg8
+, divider
+ecx reg32
+
 code seg_identifier
 ends segment
 

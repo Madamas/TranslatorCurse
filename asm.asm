@@ -21,7 +21,6 @@ Code Segment
 	mov ebx,eax
 	idiv ebx
 	mov bl,al
-	;mov al,byte ptr es:[ebx*4h+eax+6h]
 	idiv al
 	;mov al, vars
 	;mov al, dwvar
@@ -32,6 +31,7 @@ Code Segment
 	int 21h
 	int "h"
 	int lable
+	mov al,ecx
 Code ends
 end
 ; : is divider

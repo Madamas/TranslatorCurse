@@ -1,5 +1,4 @@
 defmodule Syntax do
-	@types ["equation","prefix","reg8","reg32","hexadecimal","string"]
 	#TODO
 	#Create interface for syntax analyzer
 	def check_syntax(lex)do
@@ -23,7 +22,8 @@ defmodule Syntax do
 						:false
 					end
 				else
-					type_check(line)
+					IO.inspect (Enum.split_while(line, fn(x)-> x.name != "," end)),label: "kekos"
+					type_check(Enum.split_while(line, fn(x)-> x.name != "," end))
 				end
 			end			
 		end
@@ -77,16 +77,18 @@ defmodule Syntax do
 				_->[:false,table]
 		end
 	end
+	defp id_check(string,table)do
+		:false
+	end
 	#if first lex is command
-	defp type_check(string) when (length(string) == 2)do
-		[first|[second]] = string
-		case first.name do
-			"idiv"-> if(second.type == "reg8" || second.type == "reg32")do
+	defp type_check({[command|[first]],[]})do
+		case command.name do
+			"idiv"-> if(first.type == "reg8" || first.type == "reg32")do
 				:true
 			else
 				:false
 			end
-			"int"-> case second.type do
+			"int"-> case first.type do
 				"hexadecimal"->:true
 				"string"->:true
 				"label"->:true
@@ -96,8 +98,7 @@ defmodule Syntax do
 			_-> :false
 		end
 	end
-	defp type_check(string) do
-		{[command|first], [_|last]} = Enum.split_while(string, fn(x)-> x.name != "," end)
+	defp type_check({[command|first], [_|last]}) do
 		{type1,name1} = op_check(first)
 		{type2,name2} = op_check(last)
 		im1 = make_implicit(name1)
@@ -110,6 +111,9 @@ defmodule Syntax do
 			check_types(type1,type2)
 		end		
 	end
+	defp type_check(string)do
+		:false
+	end
 	#TODO add size check so you can compare both operands for syntax 
 	#operands can't both be :type 
 	defp check_types(type1,type2) when (type1 == :type and type2 == :type) do
@@ -120,6 +124,9 @@ defmodule Syntax do
 	end
 	defp check_types(type1,type2) when (type1 == :type or type2 == :type) do
 		:true
+	end
+	defp check_types(type1,type2) when (type1 != type2) do
+		:false
 	end
 	defp file(path) do
 		{atom, pid} = File.open path,[:utf8]
@@ -147,17 +154,16 @@ defmodule Syntax do
 		string = to_string(atom)
 		map = file("allowed.md")
 		found = Enum.find map,fn(x)-> string in x.type end
-		found.allowed
+		if(found == :nil)do
+			:false
+		else
+			found.allowed
+		end
 	end
 	#checking operands
 	#TODO const will return :type type
 	defp op_check(operand) when (length(operand) == 3) do
-		#list = Regex.split (~r{dword\ ptr},str,include_captures: :true,trim: :true)
-		#IO.inspect operand,label: "GOT OPERAND HERE"
 		[fst|[sec|[thd]]] = operand
-		#IO.inspect fst,label: "GOT 1OPERAND HERE"
-		#IO.inspect sec,label: "GOT 2OPERAND HERE"
-		#IO.inspect thd,label: "GOT 3OPERAND HERE"
 		if(fst.type == "size_type" && sec.type == "operator")do
 			case fst.name do
 				"byte" ->
@@ -199,5 +205,11 @@ defmodule Syntax do
 			"identifier"->{:type,:identifier}
 			_ -> {:err,:false}
 		end
+	end
+	defp op_check(operand)do
+		{:err,:false}
+	end
+	defp equation_check(eq)do
+		
 	end
 end
