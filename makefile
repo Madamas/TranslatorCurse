@@ -13,11 +13,14 @@ Elixir.Dictionary.beam: dictionary.ex
 Elixir.Syntax.beam: syntax.ex
 	elixirc syntax.ex
 
-Elixir.Bucket.beam: bucket.ex
-	elixirc bucket.ex
+Elixir.Table.beam: table.ex
+	elixirc table.ex
+
+Elixir.Semantics.beam: semantics.ex
+	elixirc semantics.ex
 
 clean:
 	rm -rvf $(TARGET) *.beam
 
-$(TARGET): Elixir.MyCurse.beam Elixir.Dictionary.beam Elixir.Syntax.beam Elixir.Bucket.beam
+$(TARGET): Elixir.MyCurse.beam Elixir.Dictionary.beam Elixir.Syntax.beam Elixir.Table.beam
 	iex

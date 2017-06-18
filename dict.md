@@ -14,6 +14,10 @@ esi,reg32,32
 edi,reg32,32
 ebp,reg32,32
 esp,reg32,32
+ax,reg16,16
+bx,reg16,16
+cx,reg16,16
+dx,reg16,16
 al,reg8,8
 ah,reg8,8
 bl,reg8,8

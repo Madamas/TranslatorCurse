@@ -7,7 +7,11 @@ defmodule MyCurse do
 		{lex,pid} = Dictionary.make_const lex
 		lex = Dictionary.const_correct lex,pid
 		sendMidData lex
-		what = Syntax.check_syntax(lex)
+		{what,pid} = Syntax.check_syntax(lex)
+		#IO.inspect lex
+		Table.get pid,"segment"
+		Syntax.align_intervals what,pid
+		#Table.get pid,"error"
 		#lex
 		#what
 	end
@@ -27,11 +31,11 @@ defmodule MyCurse do
 		{atom, asm} = File.open path,[:utf8]
 		lex = case atom do
 			:error -> IO.puts "error"
-			:ok -> fileHandle asm,[]
+			:ok -> fileHandle asm,[],1
 		end
 		lex
 	end
-	defp fileHandle(pid,lex) do
+	defp fileHandle(pid,lex,num) do
 		string = IO.read pid,:line
 		case string do
 			:eof -> File.close pid
@@ -40,17 +44,17 @@ defmodule MyCurse do
 				string = Regex.replace(~r/\t/,string,"", global: true)
 				|>String.trim_trailing()
 				|> (&Regex.split(~r{;},&1,[parts: 2])).()
-				lex = stringHandle(string,lex)
-				fileHandle(pid,lex)
+				lex = stringHandle(string,lex,num)
+				fileHandle(pid,lex,num+1)
 		end
 
 	end
-	defp stringHandle([head|_tail],lex) do
+	defp stringHandle([head|_tail],lex,num) do
 		#\[|\]|\+|\*| just in case if you need this in future (don't forget to add this into regex)
 		str = Regex.split(~r{(\,|\=)},head, include_captures: true, trim: true)
 		|> (&for x <- &1, do: Regex.split(~r{\ },x,trim: true)).()
 		|> List.flatten()
-		|> Enum.map(fn x -> %{name: String.downcase(x),type: :unknown,size: "size"} end)
+		|> Enum.map(fn x -> %{name: String.downcase(x),type: :unknown,size: "size",string: num} end)
 		if (str == []) do
 			lex
 		else

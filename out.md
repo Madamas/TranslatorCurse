@@ -1,3 +1,5 @@
+.386 wrong_lexem
+
 data seg_identifier
 segment segment
 
@@ -6,8 +8,8 @@ db size_type
 "dbstring" string
 
 ddvar identifier
-dw size_type
-13f12423h hexadecimal
+dd size_type
+13f13h hexadecimal
 
 dwvar identifier
 dw size_type
@@ -23,6 +25,11 @@ ends segment
 code seg_identifier
 segment segment
 
+assume identifier
+cs:code identifier
+, divider
+ds:data identifier
+
 labl1: label
 
 cli command
@@ -35,14 +42,14 @@ esi reg32
 cmp command
 eax reg32
 , divider
-[esi+edi*4h+8h] equation
+[esi*4h+edi+8h] equation
 
 jcxz command
 
 xor command
 byte size_type
 ptr operator
-[eax+ebx*2h+4h] equation
+[ebx+ebx*2h+4h] equation
 , divider
 kvar const
 
@@ -84,14 +91,14 @@ al reg8
 xchg command
 byte size_type
 ptr operator
-[ebx*4h+eax+6h] equation
+[ebx*4h+ebx+6h] equation
 , divider
 al reg8
 
 xchg command
 dword size_type
 ptr operator
-[ebx*4h+eax+6h] equation
+[ebp*4h+eax+6h] equation
 , divider
 ecx reg32
 
@@ -101,18 +108,19 @@ eax reg32
 lable: label
 
 int command
+byte size_type
+ptr operator
 21h hexadecimal
 
-int command
-"h" string
+kvar const
+= directive
+22h hexadecimal
 
 int command
-lable label
+kvar const
 
-mov command
-al reg8
-, divider
-ecx reg32
+int command
+"asdsadah" string
 
 code seg_identifier
 ends segment

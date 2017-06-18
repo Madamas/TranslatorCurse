@@ -1,9 +1,13 @@
-defmodule Bucket do
+defmodule Table do
   @doc """
   Starts a new bucket.
   """
   def start_link do
     :ets.new(:id_table, [:duplicate_bag,:public])
+  end
+
+  def close_link(bucket)do
+    :ets.delete(bucket)
   end
 
   @doc """
@@ -18,5 +22,14 @@ defmodule Bucket do
   """
   def put(bucket, key, value) do
     :ets.insert(bucket,{key,value})
+  end
+
+  def delete(bucket,key)do
+    :ets.delete(bucket,key)
+  end
+
+  def update(bucket,key,value)do
+    delete(bucket,key)
+    put(bucket,key,value)
   end
 end

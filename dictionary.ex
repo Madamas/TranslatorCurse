@@ -37,7 +37,7 @@ defmodule Dictionary do
 	list
 	end
 	def make_const(lex)do
-		pid = Bucket.start_link
+		pid = Table.start_link
 		lex = Enum.map lex, fn(string)->
 			case length(string)do
 				2-> [first|[second]] = string
@@ -61,16 +61,16 @@ defmodule Dictionary do
 				if(one.type == "label")do
 					base = byte_size(one.name)-1
 					name = binary_part(one.name, 0, base)
-					Bucket.put(pid,one.type,{name,one})
+					Table.put(pid,one.type,{name,one})
 				end
 				2->[first|[second]] = string
 					if(first.type == "seg_identifier")do
-						Bucket.put(pid,first.type,first.name)
+						Table.put(pid,first.type,first.name)
 					end
 				3->[first|[second|[third]]] = string
 					case first.type do
-						"identifier"-> Bucket.put(pid,first.type,{first.name,third})
-						"const"-> Bucket.put(pid,first.type,{first.name,third})
+						"identifier"-> Table.put(pid,first.type,{first.name,third})
+						"const"-> Table.put(pid,first.type,{first.name,third})
 						_-> :nil
 					end
 				_->
@@ -79,8 +79,8 @@ defmodule Dictionary do
 		{lex,pid}
 	end
 	def const_correct(lex,pid)do
-		list = Bucket.get(pid,"const")
-		llist = Bucket.get(pid,"label")
+		list = Table.get(pid,"const")
+		llist = Table.get(pid,"label")
 		lnames = Enum.map llist, fn(x)->
 			{_,{name,_}} = x
 			name
@@ -89,13 +89,12 @@ defmodule Dictionary do
 			{_,{name,_}} = x
 			name
 		end
+		Table.close_link(pid)
 		lex = Enum.map lex, fn(string)->
 			Enum.map string,fn(x)->
 				if(x.type == "identifier")do
-					IO.inspect x.name
-					IO.inspect names
 					if(x.name in names)do
-						IO.inspect %{name: x.name,type: "const",size: x.size}
+						%{name: x.name,type: "const",size: x.size,string: x.string}
 					else
 						x
 					end
@@ -148,10 +147,10 @@ defmodule Dictionary do
 		[h|t] = tail
 		%{name: head,size: List.first(t),type: h}
 	end
-	defp checkHex([]) do
+	def checkHex([]) do
 		true
 	end
-	defp checkHex([head|tail]) do
+	def checkHex([head|tail]) do
 		allowed = ["0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"]
 		if head in allowed do
 			checkHex(tail)
