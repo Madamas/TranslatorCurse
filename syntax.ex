@@ -8,10 +8,10 @@ defmodule Syntax do
 			first = List.first(line)
 			case first.type do
 				"segment"->if(first.name == "end")do
-					:true
+					{:true,"smth"}
 				else
 					Table.put(pid,"error",first.string)
-					:false
+					{:false,"segment error"}
 				end
 				"identifier"-> id_check(line,pid)
 				"seg_identifier"-> id_check(line,pid)
@@ -19,16 +19,16 @@ defmodule Syntax do
 				"label"-> id_check(line,pid)
 				"command"-> if(first.name == "jcxz" || first.name == "cli")do
 					if(length(line) == 1)do
-						:true
+						{:true,"smth"}
 					else
 						Table.put(pid,"error",first.string)
-						:false
+						{:false,"bad argument"}
 					end
 				else
 					type_check(Enum.split_while(line, fn(x)-> x.name != "," end),pid)
 				end
 				_->Table.put(pid,"error",first.string)
-					:false
+					{:false,"wrong lexem"}
 			end			
 		end
 		synt = List.flatten wut
@@ -43,10 +43,10 @@ defmodule Syntax do
 	defp id_check(string,pid) when (length(string) == 1)do
 		first = List.first(string)
 		if(first.type == "label") do
-				:true
+				{:true,"smth"}
 			else
 				Table.put(pid,"error",first.string)
-				:false
+				{:false,"wrong lexem"}
 			end
 	end
 	defp id_check(string,pid) when (length(string) == 2)do
@@ -54,13 +54,12 @@ defmodule Syntax do
 		if(first.type == "seg_identifier" && second.name == "segment")do
 			list = Table.get pid,"segment"
 			list = Enum.filter(list,fn({_,{{name,state},_}})-> name == first.name && state == "start" end)
-			IO.inspect list,label: "LIST START"
 			if(length(list) == 0)do
 			Table.put pid,"segment",{{first.name,"start"},first.string}
-			:true
+			{:true,"smth"}
 			else
 				Table.put(pid,"error",first.string)
-				:false
+				{:false,"segment redefinition"}
 			end
 		else
 			if(first.type == "seg_identifier" && second.name == "ends")do
@@ -68,14 +67,14 @@ defmodule Syntax do
 			list = Enum.filter(list,fn({_,{{name,state},_}})-> name == first.name && state == "end" end)
 			if(length(list) == 0)do
 			Table.put pid,"segment",{{first.name,"end"},first.string}
-			:true
+			{:true,"smth"}
 			else
 			Table.put(pid,"error",first.string)
-			:false
+			{:false,"multiple segment close"}
 			end
 			else
 			Table.put(pid,"error",first.string)
-			:false
+			{:false,"segment error"}
 			end
 		end
 	end
@@ -88,68 +87,68 @@ defmodule Syntax do
 				list = Enum.filter(list,fn({"var",val})-> val == first.name end)
 				if(length(list) == 0)do
 				Table.put pid,"var",first.name
-				:true
+				{:true,"smth"}
 				else
 				Table.put(pid,"error",first.string)
-				:false
+				{:false,"name redefinition"}
 				end
 			else
 				Table.put(pid,"error",first.string)
-				:false
+				{:false,"type error"}
 			end
 			"dw"-> if(third.type == "hexadecimal") do
 				list = Table.get pid,"var"
 				list = Enum.filter(list,fn({"var",val})-> val == first.name end)
 				if(length(list) == 0)do
 				Table.put pid,"var",first.name
-				:true
+				{:true,"smth"}
 				else
 				Table.put(pid,"error",first.string)
-				:false
+				{:false,"name redefinition"}
 				end
 			else
 				Table.put(pid,"error",first.string)
-				:false
+				{:false,"type error"}
 			end
 			"dd"-> if(third.type == "hexadecimal") do
 				list = Table.get pid,"var"
 				list = Enum.filter(list,fn({"var",val})-> val == first.name end)
 				if(length(list) == 0)do
 				Table.put pid,"var",first.name
-				:true
+				{:true,"smth"}
 				else
 				Table.put(pid,"error",first.string)
-				:false
+				{:false,"name redefinition"}
 				end
 			else
 				Table.put(pid,"error",first.string)
-				:false
+				{:false,"type error"}
 			end
-			"="-> if(third.type == "string" || third.type == "hexadecimal") do
+			"="-> if(third.type == "hexadecimal") do
 				Table.put(pid,"const",{first.name,third.name})
-				:true
+				{:true,"smth"}
 			else
 				Table.put(pid,"error",first.string)
-				:false
+				{:false,"type error"}
 			end
 				_->Table.put(pid,"error",first.string)
-				:false
+				{:false,"type error"}
 		end
 	end
 	defp id_check(string,pid)do
 		first = List.first(string)
 		Table.put(pid,"error",first.string)
-		:false
+		{:false,"type error"}
 	end
 	#if theres casting in one operand command
 	defp type_check({[command|[first|[second|[third]]]],[]},pid)do
 		if(first.type == "size_type" && second.type == "operator")do
 			case command.name do
 			"idiv"-> if((third.type == "reg8" && first.name != "word") || (third.type == "reg32" && first.name != "word"))do
-				:true
+				{:true,"smth"}
 			else
 				Table.put(pid,"error",third.string)
-				:false
+				{:false,"type error"}
 			end
 			"int"-> case third.type do
 				"hexadecimal"->
@@ -157,22 +156,21 @@ defmodule Syntax do
 				hex = String.codepoints(binary_part(third.name, 0, base))
 				if(length(hex)>8 && first.name != "byte")do
 					Table.put(pid,"error",third.string)
-					:false
+					{:false,"type error"}
 				else
-					:true
+					{:true,"smth"}
 				end
 
 				"string"->
 					if(length(String.codepoints(third.name))>3)do
 						Table.put(pid,"error",third.string)
-						:false
+						{:false,"type error"}
 					else
-						:true
+						{:true,"smth"}
 					end
 
 				"const"->
 				list = Table.get(pid,"const")
-				|>IO.inspect
 				|>Enum.filter(fn({_,{name,_}})->name == third.name end)
 				|>List.last
 				{_,{key,value}} = list
@@ -180,15 +178,15 @@ defmodule Syntax do
 				hex = String.codepoints(binary_part(value, 0, base))
 				if(length(hex)>8)do
 					Table.put(pid,"error",third.string)
-					:false
+					{:false,"type error"}
 				else
-					:true
+					{:true,"smth"}
 				end
 				_->Table.put(pid,"error",third.string)
 					:false
 			end
 			_-> Table.put(pid,"error",third.string)
-				:false
+				{:false,"type error"}
 		end
 		else
 			{:err,:false}
@@ -198,10 +196,10 @@ defmodule Syntax do
 	defp type_check({[command|[first]],[]},pid)do
 		case command.name do
 			"idiv"-> if(first.type == "reg8" || first.type == "reg32")do
-				:true
+				{:true,"smth"}
 			else
 				Table.put(pid,"error",first.string)
-				:false
+				{:false,"type error"}
 			end
 			"int"-> case first.type do
 				"hexadecimal"->
@@ -209,20 +207,19 @@ defmodule Syntax do
 				hex = String.codepoints(binary_part(first.name, 0, base))
 				if(length(hex)>8)do
 					Table.put(pid,"error",first.string)
-					:false
+					{:false,"type error"}
 				else
-					:true
+					{:true,"smth"}
 				end
 				"string"->
 					if(length(String.codepoints(first.name))>3)do
 						Table.put(pid,"error",first.string)
-						:false
+						{:false,"type error"}
 					else
-						:true
+						{:true,"smth"}
 					end
 				"const"->
 				list = Table.get(pid,"const")
-				|>IO.inspect
 				|>Enum.filter(fn({_,{name,_}})->name == first.name end)
 				|>List.last
 				{_,{key,value}} = list
@@ -230,49 +227,67 @@ defmodule Syntax do
 				hex = String.codepoints(binary_part(value, 0, base))
 				if(length(hex)>8)do
 					Table.put(pid,"error",first.string)
-					:false
+					{:false,"type error"}
 				else
-					:true
+					{:true,"smth"}
 				end
 				_->Table.put(pid,"error",first.string)
-					:false
+					{:false,"type error"}
 			end
 			_-> Table.put(pid,"error",first.string)
-				:false
+				{:false,"type error"}
 		end
 	end
 	defp type_check({[command|first], [_|last]},pid) do
-		{type1,name1} = op_check(first)
-		{type2,name2} = op_check(last)
+		fst = List.first(first)
+		lst = List.first(last)
+		{type1,name1} = op_check(first,pid)
+		{type2,name2} = op_check(last,pid)
 		im1 = make_implicit(name1)
 		im2 = make_implicit(name2)
 		synt = file("syntax.md")
 		wew = Enum.find synt,fn(x)-> (x.type == [im1,im2] and x.allowed == command.name) end
 		if(wew == :nil)do
 			Table.put(pid,"error",command.string)
-			:false
+			{:false,"type error"}
 		else
-			if(check_types(type1,type2))do
-				:true
-			else
-				Table.put(pid,"error",command.string)
-				:false
+			case check_types(type1,type2) do
+				:warning->
+					Table.put(pid,"warning",command.string)
+					{:warning,"type mismatch"}
+				false->
+					Table.put(pid,"error",command.string)
+					{:false,"type error"}
+				true-> 
+				if(command.name == "xor" and (type1 == :type || type2 == :type))do
+					Table.put(pid,"error",command.string)
+					{:false,"type error"}
+				else
+					{:true,"smth"}
+				end
 			end
 		end		
 	end
 	defp type_check(string)do
 		:false
 	end
-	#TODO add size check so you can compare both operands for syntax 
-	#operands can't both be :type 
 	defp check_types(type1,type2) when (type1 == :type and type2 == :type) do
 		:false
 	end
 	defp check_types(type1,type2) when (type1 == type2) do
 		:true
 	end
+	defp check_types(type1,type2) when ((type1 == :reg or type2 == :reg)and(type1 == :type or type2 == :type)) do
+		:warning
+	end
 	defp check_types(type1,type2) when (type1 == :type or type2 == :type) do
 		:true
+	end
+	defp check_types(type1,type2) when (type1 == :reg and type2 == :reg) do
+		:true
+	end
+	defp check_types(type1,type2) when (type1 == :reg or type2 == :reg) do
+		:warning
 	end
 	defp check_types(type1,type2) when (type1 != type2) do
 		:false
@@ -311,7 +326,7 @@ defmodule Syntax do
 	end
 	#checking operands
 	#TODO const will return :type type
-	defp op_check(operand) when (length(operand) == 3) do
+	defp op_check(operand,pid) when (length(operand) == 3) do
 		[fst|[sec|[thd]]] = operand
 		if(fst.type == "size_type" && sec.type == "operator")do
 			case fst.name do
@@ -322,15 +337,19 @@ defmodule Syntax do
 					   	else
 					   	{:err,:false}
 					   end
-					   "prefix" ->if(prefix_check(thd.name))do
+					   "prefix" ->if(equation_check(thd.name))do
 					   	{:byte,:prefix}
 					   	else
 					   	{:err,:false}
 					   end
-					   "reg8" -> {:byte,:reg8}
-					   "reg32" -> {:byte,:reg32}
-					   "hexadecimal" ->	{:byte,:hexadecimal}
-					   "string" -> {:byte1,:string}
+					   "identifier"->
+					   	list = Table.get pid,"var"
+						list = Enum.filter(list,fn({"var",val})-> val == fst.name end)
+						if(length(list) == 0)do
+						{:byte,:identifier}
+						else
+						{:err,:false}
+						end
 					   _ -> {:err,:false}
 					end
 				"word" ->
@@ -345,10 +364,14 @@ defmodule Syntax do
 					   	else
 					   	{:err,:false}
 					   end
-					   "reg8" -> {:word,:reg8}
-					   "reg32" -> {:word,:reg32}
-					   "hexadecimal" ->	{:word,:hexadecimal}
-					   "string" -> {:word1,:string}
+					   "identifier"->
+					   	list = Table.get pid,"var"
+						list = Enum.filter(list,fn({"var",val})-> val == fst.name end)
+						if(length(list) == 0)do
+						{:word,:identifier}
+						else
+						{:err,:false}
+						end
 					   _ -> {:err,:false}
 					end
 				"dword" ->
@@ -363,10 +386,14 @@ defmodule Syntax do
 					   	else
 					   	{:err,:false}
 					   end
-					   "reg8" -> {:dword,:reg8}
-					   "reg32" -> {:dword,:reg32}
-					   "hexadecimal" ->	{:dword,:hexadecimal}
-					   "string" -> {:dword1,:string}
+					   "identifier"->
+					   	list = Table.get pid,"var"
+						list = Enum.filter(list,fn({"var",val})-> val == fst.name end)
+						if(length(list) == 0)do
+						{:byte,:identifier}
+						else
+						{:err,:false}
+						end
 					   _ -> {:err,:false}
 					end
 				_ -> {:err,:false}
@@ -375,7 +402,7 @@ defmodule Syntax do
 			{:err,:false}
 		end
 	end
-	defp op_check(operand) when (length(operand) == 1) do
+	defp op_check(operand,pid) when (length(operand) == 1) do
 		[lol] = operand
 		case lol.type do
 			"equation" -> if(equation_check(lol.name))do
@@ -383,13 +410,13 @@ defmodule Syntax do
 			   	else
 			   	{:err,:false}
 			   end
-			"prefix" -> if(prefix_check(lol.name))do
+			"prefix" -> if(equation_check(lol.name))do
 				{:type,:prefix}
 			   	else
 			   	{:err,:false}
 			   end
-			"reg8" -> {:byte,:reg8}
-			"reg32" -> {:dword,:reg32}
+			"reg8" -> {:reg,:reg8}
+			"reg32" -> {:reg,:reg32}
 			"hexadecimal" ->{:type,:hexadecimal}
 			"string" -> {:type,:string}
 			"const" -> {:type,:const}
@@ -397,14 +424,30 @@ defmodule Syntax do
 			_ -> {:err,:false}
 		end
 	end
-	defp op_check(operand)do
+	defp op_check(operand,pid)do
 		{:err,:false}
 	end
 	defp equation_check([eq])do
 		list = Regex.split(~r{(\[|\]|\+|\*)},eq,include_captures: true, trim: true)
 		allowed = ["eax","ebx","ecx","edx","esi","ebp","esp"]
 		used = ["[","]","+","+","*"]
-		golist(list,allowed,used)
+		mult = ["2h","4h","8h"]
+		IO.inspect eq,label: "eq"
+		numbers = Enum.filter(list, fn(x) ->
+			base = byte_size(x)-1
+			last = binary_part(x,base,byte_size(x)-base)
+			last == "h"
+		 end)
+		if(length(numbers) == 2)do
+				[first|[second]] = numbers
+				if(first in mult && length(String.codepoints(second)) <= 10)do
+					golist(list,allowed,used)
+					else
+					false
+				end
+			else
+				false
+		end
 	end
 	defp equation_check(eq)do
 		list = Regex.split(~r{\:},eq)
@@ -444,17 +487,13 @@ defmodule Syntax do
 		{_,{{name,_},_}} = List.first(list)
 		intervals = Enum.filter(list,fn({_,{{seg,_},_}}) -> seg == name end)
 		if(length(intervals) == 2)do
-			IO.inspect intervals,label: "intervals"
 			[first|[second]] = intervals
 			{_,{{name,_},head}} = first
 			{_,{{name,_},tail}} = second
-			IO.inspect head,label: "head"
-			IO.inspect tail,label: "tail"
 			if(head > tail) do
 				seg_align(Enum.filter(list,fn({_,{{seg,_},_}}) -> seg != name end),acc)
 			else
 				gen = for n <- head..tail, do: n
-				IO.inspect gen,label: "gen"
 				seg_align(Enum.filter(list,fn({_,{{seg,_},_}}) -> seg != name end),[acc]++[gen])
 			end
 		else
@@ -465,11 +504,11 @@ defmodule Syntax do
 		list = Table.get pid,"segment"
 		intervals = seg_align(list,[])
 		Enum.map lex, fn(string)->
-			[flag|[first|tail]] = string
+			[{flag,_}|[first|tail]] = string
 			if(first.string in intervals || first.name == "end")do
 				string
 			else
-				[false|[first|tail]]
+				[{false,"out of segment"}|[first|tail]]
 			end
 		end
 	end

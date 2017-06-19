@@ -32,6 +32,9 @@ ds:data identifier
 
 labl1: label
 
+int command
+"h" string
+
 cli command
 
 mov command
@@ -85,7 +88,133 @@ bl reg8
 , divider
 al reg8
 
+mov command
+eax reg32
+, divider
+ebx reg32
+
+mov command
+ecx reg32
+, divider
+al reg8
+
+mov command
+al reg8
+, divider
+edx reg32
+
 idiv command
+al reg8
+
+xor command
+gs:[ebx*4h+ebx+6h] prefix
+, divider
+22222222h hexadecimal
+
+xchg command
+ddvar identifier
+, divider
+al reg8
+
+xchg command
+ddvar identifier
+, divider
+eax reg32
+
+xchg command
+dword size_type
+ptr operator
+ddvar identifier
+, divider
+al reg8
+
+xchg command
+byte size_type
+ptr operator
+ddvar identifier
+, divider
+eax reg32
+
+xchg command
+[ebx*4h+ebx+6h] equation
+, divider
+al reg8
+
+xchg command
+[ebx*4h+ebx+6h] equation
+, divider
+ecx reg32
+
+xchg command
+byte size_type
+ptr operator
+es:[ebx*4h+ebx+6h] prefix
+, divider
+ecx reg32
+
+xchg command
+es:[ebx*4h+ebx+6h] prefix
+, divider
+al reg8
+
+xchg command
+ds:[ebx*4h+ebx+6h] prefix
+, divider
+ecx reg32
+
+xchg command
+ds:[ebx*4h+ebx+6h] prefix
+, divider
+al reg8
+
+xchg command
+cs:[ebx*4h+ebx+6h] prefix
+, divider
+ecx reg32
+
+xchg command
+cs:[ebx*4h+ebx+6h] prefix
+, divider
+al reg8
+
+xchg command
+ss:[ebp*4h+ebp+6h] prefix
+, divider
+ecx reg32
+
+xchg command
+ss:[esi*4h+esi+6h] prefix
+, divider
+al reg8
+
+xchg command
+ss:[esi*4h+esi+6h] prefix
+, divider
+ecx reg32
+
+xchg command
+ss:[ebp*4h+ebp+6h] prefix
+, divider
+al reg8
+
+xchg command
+fs:[ebx*4h+ebx+6h] prefix
+, divider
+ecx reg32
+
+xchg command
+fs:[ebx*4h+ebx+6h] prefix
+, divider
+al reg8
+
+xchg command
+gs:[ebx*4h+ebx+6h] prefix
+, divider
+ecx reg32
+
+xchg command
+gs:[ebx*4h+ebx+6h] prefix
+, divider
 al reg8
 
 xchg command
@@ -101,6 +230,70 @@ ptr operator
 [ebp*4h+eax+6h] equation
 , divider
 ecx reg32
+
+xchg command
+byte size_type
+ptr operator
+[ebx*4h+ebx+6h] equation
+, divider
+ecx reg32
+
+xchg command
+dword size_type
+ptr operator
+[ebp*4h+eax+6h] equation
+, divider
+al reg8
+
+xor command
+dwvar identifier
+, divider
+22h hexadecimal
+
+xor command
+byte size_type
+ptr operator
+dwvar identifier
+, divider
+22h hexadecimal
+
+xor command
+dword size_type
+ptr operator
+dwvar identifier
+, divider
+22h hexadecimal
+
+xor command
+dwvar identifier
+, divider
+kvar const
+
+xor command
+byte size_type
+ptr operator
+dwvar identifier
+, divider
+kvar const
+
+xor command
+dword size_type
+ptr operator
+dwvar identifier
+, divider
+kvar const
+
+cmp command
+al reg8
+, divider
+ddvar identifier
+
+xor command
+byte size_type
+ptr operator
+[ebx*4h+ebx+6h] equation
+, divider
+"string" string
 
 idiv command
 eax reg32
@@ -118,9 +311,6 @@ kvar const
 
 int command
 kvar const
-
-int command
-"asdsadah" string
 
 code seg_identifier
 ends segment

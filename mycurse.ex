@@ -9,7 +9,7 @@ defmodule MyCurse do
 		sendMidData lex
 		{what,pid} = Syntax.check_syntax(lex)
 		#IO.inspect lex
-		Table.get pid,"segment"
+		Table.get pid,"counter"
 		Syntax.align_intervals what,pid
 		#Table.get pid,"error"
 		#lex
