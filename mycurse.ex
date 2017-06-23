@@ -9,11 +9,11 @@ defmodule MyCurse do
 		sendMidData lex
 		{what,pid} = Syntax.check_syntax(lex)
 		#IO.inspect lex
-		Table.get pid,"counter"
-		Syntax.align_intervals what,pid
+		Semantics.count_bytes(what,pid)
+		#Syntax.align_intervals what,pid
 		#Table.get pid,"error"
 		#lex
-		#what
+		#IO.inspect what
 	end
 	defp sendMidData(what) do
 		{:ok, opid} = File.open "out.md",[:write]

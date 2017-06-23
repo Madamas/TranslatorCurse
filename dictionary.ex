@@ -61,6 +61,7 @@ defmodule Dictionary do
 				if(one.type == "label")do
 					base = byte_size(one.name)-1
 					name = binary_part(one.name, 0, base)
+					Table.put(pid,"identifier",{name,one})
 					Table.put(pid,one.type,{name,one})
 				end
 				2->[first|[second]] = string
@@ -69,8 +70,9 @@ defmodule Dictionary do
 					end
 				3->[first|[second|[third]]] = string
 					case first.type do
-						"identifier"-> Table.put(pid,first.type,{first.name,third})
-						"const"-> Table.put(pid,first.type,{first.name,third})
+						"identifier"-> Table.put(pid,first.type,{first.name,%{third|type: "#{second.name}"}})
+						"const"-> Table.put(pid,"identifier",{first.name,third})
+							Table.put(pid,first.type,{first.name,third})
 						_-> :nil
 					end
 				_->

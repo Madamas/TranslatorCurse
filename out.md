@@ -1,5 +1,3 @@
-.386 wrong_lexem
-
 data seg_identifier
 segment segment
 
@@ -24,11 +22,6 @@ ends segment
 
 code seg_identifier
 segment segment
-
-assume identifier
-cs:code identifier
-, divider
-ds:data identifier
 
 labl1: label
 
@@ -55,6 +48,11 @@ ptr operator
 [ebx+ebx*2h+4h] equation
 , divider
 kvar const
+
+xor command
+gs:[ebx*4h+ebx+6h] prefix
+, divider
+2222h hexadecimal
 
 mov command
 eax reg32
@@ -106,10 +104,55 @@ edx reg32
 idiv command
 al reg8
 
+mov command
+eax reg32
+, divider
+25h hexadecimal
+
+mov command
+eax reg32
+, divider
+kvar const
+
+mov command
+eax reg32
+, divider
+labl1 label
+
+kvar const
+= directive
+"k" string
+
+xor command
+dwvar identifier
+, divider
+kvar const
+
+xor command
+byte size_type
+ptr operator
+dwvar identifier
+, divider
+kvar const
+
+xor command
+dword size_type
+ptr operator
+dwvar identifier
+, divider
+kvar const
+
+xor command
+dword size_type
+ptr operator
+gs:[ebx*4h+ebx+66666h] prefix
+, divider
+22h hexadecimal
+
 xor command
 gs:[ebx*4h+ebx+6h] prefix
 , divider
-22222222h hexadecimal
+2222h hexadecimal
 
 xchg command
 ddvar identifier
@@ -118,6 +161,11 @@ al reg8
 
 xchg command
 ddvar identifier
+, divider
+eax reg32
+
+xchg command
+dwvar identifier
 , divider
 eax reg32
 
@@ -163,6 +211,16 @@ ds:[ebx*4h+ebx+6h] prefix
 ecx reg32
 
 xchg command
+ds:[ebp*4h+ebx+6h] prefix
+, divider
+ecx reg32
+
+xchg command
+ds:[ebp*4h+esp+6h] prefix
+, divider
+ecx reg32
+
+xchg command
 ds:[ebx*4h+ebx+6h] prefix
 , divider
 al reg8
@@ -183,6 +241,16 @@ ss:[ebp*4h+ebp+6h] prefix
 ecx reg32
 
 xchg command
+ss:[ebx*4h+ebp+6h] prefix
+, divider
+ecx reg32
+
+xchg command
+ss:[ebx*4h+eax+6h] prefix
+, divider
+ecx reg32
+
+xchg command
 ss:[esi*4h+esi+6h] prefix
 , divider
 al reg8
@@ -220,7 +288,7 @@ al reg8
 xchg command
 byte size_type
 ptr operator
-[ebx*4h+ebx+6h] equation
+[ebx*4h+ebx+66666h] equation
 , divider
 al reg8
 
@@ -248,7 +316,7 @@ al reg8
 xor command
 dwvar identifier
 , divider
-22h hexadecimal
+2222h hexadecimal
 
 xor command
 byte size_type
@@ -277,23 +345,66 @@ dwvar identifier
 kvar const
 
 xor command
+byte size_type
+ptr operator
+dwvar identifier
+, divider
+"2" string
+
+xor command
 dword size_type
 ptr operator
 dwvar identifier
 , divider
 kvar const
+
+xor command
+dword size_type
+ptr operator
+dwvar identifier
+, divider
+"22" string
+
+xor command
+dword size_type
+ptr operator
+dwvar identifier
+, divider
+"222" string
+
+xor command
+dword size_type
+ptr operator
+gs:[ebx*4h+ebx+66h] prefix
+, divider
+22h hexadecimal
+
+xor command
+dword size_type
+ptr operator
+gs:[ebx*4h+ebx+66h] prefix
+, divider
+"2" string
 
 cmp command
 al reg8
 , divider
 ddvar identifier
 
-xor command
-byte size_type
-ptr operator
-[ebx*4h+ebx+6h] equation
+cmp command
+al reg8
 , divider
-"string" string
+gs:[ebx*4h+ebx+66666h] prefix
+
+cmp command
+eax reg32
+, divider
+gs:[ebx*4h+ebx+66666h] prefix
+
+cmp command
+eax reg32
+, divider
+ddvar identifier
 
 idiv command
 eax reg32

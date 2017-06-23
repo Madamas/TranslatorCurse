@@ -22,5 +22,5 @@ Elixir.Semantics.beam: semantics.ex
 clean:
 	rm -rvf $(TARGET) *.beam
 
-$(TARGET): Elixir.MyCurse.beam Elixir.Dictionary.beam Elixir.Syntax.beam Elixir.Table.beam
+$(TARGET): Elixir.MyCurse.beam Elixir.Dictionary.beam Elixir.Syntax.beam Elixir.Table.beam Elixir.Semantics.beam
 	iex

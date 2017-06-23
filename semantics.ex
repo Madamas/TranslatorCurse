@@ -1,15 +1,41 @@
 defmodule Semantics do
-	def count(lex,pid)do
-		Enum.map lex,fn(x)->
-			[{flag,_}|tail] = x
+	def count_bytes(lex,pid)do
+		wut = Enum.map lex, fn(line)->
+			[{flag,_}|tail] = line
 			if flag do
-			
-			else
-			x
+			first = List.first(tail)
+			case first.type do
+				"segment"-> 0
+				"identifier"-> id_check(tail,pid)
+				"seg_identifier"-> id_check(tail,pid)
+				"const"-> id_check(tail,pid)
+				"label"-> id_check(tail,pid)
+				"command"-> 
+					case first.name do
+						"jcxz"->
+						[{"counter",counter}] = Table.get pid,"counter" 
+						Table.update pid,"counter",counter+2
+						"cli"-> 
+						[{"counter",counter}] = Table.get pid,"counter" 
+						Table.update pid,"counter",counter+1
+						_-> type_check(Enum.split_while(tail, fn(x)-> x.name != "," end),pid)
+					end
+				_-> 0
 			end
+			else
+			line
+			end		
 		end
+		List.flatten wut
+		align(wut,lex,[])
 	end
-	def count_bytes(string,pid)do
+	defp align([],[],acc)do
+		acc
+	end
+				#wut - lex
+	defp align([h|t],[head|tail],acc)do		
+		[{flag,fk}|tl] = head
+		align(t,tail,acc++[[[{flag,h}|tl]|head]])
 	end
 	defp id_check(string,pid) when (length(string) == 1)do
 		first = List.first(string)
@@ -34,108 +60,45 @@ defmodule Semantics do
 	#if first lex is identifier
 	defp id_check(string,pid) when (length(string) == 3) do
 	[first|[second|[third]]]= string
-	[{"counter",count}] = Table.get pid,"counter"
 		case second.name do
-			"db"-> if(third.type == "string")do
-					
-				else
-			 	if(third.type == "hexadecimal") do
-				
+			"db"-> 
+				case third.type do
+					"string"->
+						[{"counter",counter}] = Table.get pid,"counter" 
+						Table.update pid,"counter",counter+String.length(third.name)-2
+						String.length(third.name)-2
+					"hexadecimal"->
+						[{"counter",counter}] = Table.get pid,"counter" 
+						Table.update pid,"counter",counter+1
+						1
 				end
-				end
-			else
-				Table.put(pid,"error",first.string)
-				{:false,"type error"}
-			end
-			"dw"-> if(third.type == "hexadecimal") do
-				list = Table.get pid,"var"
-				list = Enum.filter(list,fn({"var",val})-> val == first.name end)
-				if(length(list) == 0)do
-				Table.put pid,"var",first.name
-				{:true,"smth"}
-				else
-				Table.put(pid,"error",first.string)
-				{:false,"name redefinition"}
-				end
-			else
-				Table.put(pid,"error",first.string)
-				{:false,"type error"}
-			end
-			"dd"-> if(third.type == "hexadecimal") do
-				list = Table.get pid,"var"
-				list = Enum.filter(list,fn({"var",val})-> val == first.name end)
-				if(length(list) == 0)do
-				Table.put pid,"var",first.name
-				{:true,"smth"}
-				else
-				Table.put(pid,"error",first.string)
-				{:false,"name redefinition"}
-				end
-			else
-				Table.put(pid,"error",first.string)
-				{:false,"type error"}
-			end
-			"="-> if(third.type == "hexadecimal") do
-				Table.put(pid,"const",{first.name,third.name})
-				{:true,"smth"}
-			else
-				Table.put(pid,"error",first.string)
-				{:false,"type error"}
-			end
-				_->Table.put(pid,"error",first.string)
-				{:false,"type error"}
+			"dw"-> 
+				[{"counter",counter}] = Table.get pid,"counter" 
+				Table.update pid,"counter",counter+2
+				2
+			"dd"->
+				[{"counter",counter}] = Table.get pid,"counter" 
+				Table.update pid,"counter",counter+2 
+				4
+			"="-> 
+				0
 		end
 	end
 	defp id_check(string,pid)do
-		first = List.first(string)
-		Table.put(pid,"error",first.string)
-		{:false,"type error"}
+		0
 	end
 	#if theres casting in one operand command
 	defp type_check({[command|[first|[second|[third]]]],[]},pid)do
 		if(first.type == "size_type" && second.type == "operator")do
 			case command.name do
-			"idiv"-> if((third.type == "reg8" && first.name != "word") || (third.type == "reg32" && first.name != "word"))do
-				{:true,"smth"}
-			else
-				Table.put(pid,"error",third.string)
-				{:false,"type error"}
-			end
-			"int"-> case third.type do
-				"hexadecimal"->
-				base = byte_size(third.name)-1
-				hex = String.codepoints(binary_part(third.name, 0, base))
-				if(length(hex)>8 && first.name != "byte")do
-					Table.put(pid,"error",third.string)
-					{:false,"type error"}
-				else
-					{:true,"smth"}
-				end
-
-				"string"->
-					if(length(String.codepoints(third.name))>3)do
-						Table.put(pid,"error",third.string)
-						{:false,"type error"}
-					else
-						{:true,"smth"}
-					end
-
-				"const"->
-				list = Table.get(pid,"const")
-				|>Enum.filter(fn({_,{name,_}})->name == third.name end)
-				|>List.last
-				{_,{key,value}} = list
-				base = byte_size(value)-1
-				hex = String.codepoints(binary_part(value, 0, base))
-				if(length(hex)>8)do
-					Table.put(pid,"error",third.string)
-					{:false,"type error"}
-				else
-					{:true,"smth"}
-				end
-				_->Table.put(pid,"error",third.string)
-					:false
-			end
+			"idiv"-> 
+				[{"counter",counter}] = Table.get pid,"counter" 
+				Table.update pid,"counter",counter+2
+				2
+			"int"-> 
+				[{"counter",counter}] = Table.get pid,"counter" 
+				Table.update pid,"counter",counter+2
+				2
 			_-> Table.put(pid,"error",third.string)
 				{:false,"type error"}
 		end
@@ -146,255 +109,446 @@ defmodule Semantics do
 	#if first lex is command
 	defp type_check({[command|[first]],[]},pid)do
 		case command.name do
-			"idiv"-> if(first.type == "reg8" || first.type == "reg32")do
-				{:true,"smth"}
-			else
-				Table.put(pid,"error",first.string)
-				{:false,"type error"}
-			end
-			"int"-> case first.type do
-				"hexadecimal"->
-				base = byte_size(first.name)-1
-				hex = String.codepoints(binary_part(first.name, 0, base))
-				if(length(hex)>8)do
-					Table.put(pid,"error",first.string)
-					{:false,"type error"}
-				else
-					{:true,"smth"}
-				end
-				"string"->
-					if(length(String.codepoints(first.name))>3)do
-						Table.put(pid,"error",first.string)
-						{:false,"type error"}
-					else
-						{:true,"smth"}
-					end
-				"const"->
-				list = Table.get(pid,"const")
-				|>Enum.filter(fn({_,{name,_}})->name == first.name end)
-				|>List.last
-				{_,{key,value}} = list
-				base = byte_size(value)-1
-				hex = String.codepoints(binary_part(value, 0, base))
-				if(length(hex)>8)do
-					Table.put(pid,"error",first.string)
-					{:false,"type error"}
-				else
-					{:true,"smth"}
-				end
-				_->Table.put(pid,"error",first.string)
-					{:false,"type error"}
-			end
-			_-> Table.put(pid,"error",first.string)
-				{:false,"type error"}
+			"idiv"-> 
+				[{"counter",counter}] = Table.get pid,"counter" 
+				Table.update pid,"counter",counter+2
+				2
+			"int"-> 
+			case first.name do
+				"3"->
+				[{"counter",counter}] = Table.get pid,"counter" 
+				Table.update pid,"counter",counter+1
+				1
+				_->
+				[{"counter",counter}] = Table.get pid,"counter" 
+				Table.update pid,"counter",counter+2
+				2
+			end			
+			_-> 0
 		end
 	end
 	defp type_check({[command|first], [_|last]},pid) do
 		fst = List.first(first)
 		lst = List.first(last)
-		{type1,name1} = op_check(first,pid)
-		{type2,name2} = op_check(last,pid)
+		{type1,name1,offset1} = op_check(first,pid)
+		{type2,name2,offset2} = op_check(last,pid)
 		im1 = make_implicit(name1)
 		im2 = make_implicit(name2)
 		synt = file("syntax.md")
 		wew = Enum.find synt,fn(x)-> (x.type == [im1,im2] and x.allowed == command.name) end
-		if(wew == :nil)do
-			Table.put(pid,"error",command.string)
-			{:false,"type error"}
-		else
-			case check_types(type1,type2) do
-				:warning->
-					Table.put(pid,"warning",command.string)
-					{:warning,"type mismatch"}
-				false->
-					Table.put(pid,"error",command.string)
-					{:false,"type error"}
-				true-> 
-				if(command.name == "xor" and (type1 == :type || type2 == :type))do
-					Table.put(pid,"error",command.string)
-					{:false,"type error"}
-				else
-					{:true,"smth"}
-				end
-			end
+		case command.name do
+			"mov"->for_mov({type1,name1},{type2,im2},pid)
+			"xchg"->for_xchg({type1,name1,offset1},{type2,im2},pid)
+			"cmp"->for_cmp({type1,im1},{type2,name2,offset2},pid)
+			"xor"->for_xor({type1,name1,offset1},{type2,name2,offset2},pid)
+			_->0
 		end		
 	end
-	defp type_check(string)do
-		:false
+	defp for_mov({type1,name1},{type2,name2},pid) when (name1 == :reg32 and name2 == :reg) do
+		[{"counter",counter}] = Table.get pid,"counter" 
+		Table.update pid,"counter",counter+2
+		2
 	end
-	defp check_types(type1,type2) when (type1 == :type and type2 == :type) do
-		:false
+	defp for_mov({type1,name1},{type2,name2},pid) when (name1 == :reg32 and name2 == :reg) do
+		[{"counter",counter}] = Table.get pid,"counter" 
+		Table.update pid,"counter",counter+2
+		2
 	end
-	defp check_types(type1,type2) when (type1 == type2) do
-		:true
+	defp for_mov({type1,name1},{type2,name2},pid) when (name1 == :reg8 and name2 == :reg) do
+		[{"counter",counter}] = Table.get pid,"counter" 
+		Table.update pid,"counter",counter+2
+		2
 	end
-	defp check_types(type1,type2) when ((type1 == :reg or type2 == :reg)and(type1 == :type or type2 == :type)) do
-		:warning
+	defp for_mov({type1,name1},{type2,name2},pid) when (name1 == :reg8 and name2 == :reg) do
+		[{"counter",counter}] = Table.get pid,"counter" 
+		Table.update pid,"counter",counter+2
+		2
 	end
-	defp check_types(type1,type2) when (type1 == :type or type2 == :type) do
-		:true
+	defp for_mov({type1,name1},{type2,name2},pid) when (name1 == :reg32 and name2 == :imm) do
+		[{"counter",counter}] = Table.get pid,"counter" 
+		Table.update pid,"counter",counter+5
+		5
 	end
-	defp check_types(type1,type2) when (type1 == :reg and type2 == :reg) do
-		:true
+	defp for_mov({type1,name1},{type2,name2},pid) when (name1 == :reg8 and name2 == :imm) do
+		[{"counter",counter}] = Table.get pid,"counter" 
+		Table.update pid,"counter",counter+2
+		2
 	end
-	defp check_types(type1,type2) when (type1 == :reg or type2 == :reg) do
-		:warning
+	defp for_xchg({type1,name1,offset1},{type2,im2},pid) when (name1 == :identifier and im2 == :reg) do
+		[{"counter",counter}] = Table.get pid,"counter" 
+		Table.update pid,"counter",counter+6
+		6
 	end
-	defp check_types(type1,type2) when (type1 != type2) do
-		:false
+	defp for_xchg({type1,name1,offset1},{type2,im2},pid) when (name1 == :equation and im2 == :reg) do
+		[{"counter",counter}] = Table.get pid,"counter" 
+		Table.update pid,"counter",counter+3+offset1
+		3+offset1
 	end
+	defp for_xchg({type1,name1,offset1},{type2,im2},pid) when (name1 == :prefix and im2 == :reg) do
+		[{"counter",counter}] = Table.get pid,"counter" 
+		Table.update pid,"counter",counter+4+offset1
+		4+offset1
+	end
+	defp for_cmp({type1,im1},{type2,name2,offset2},pid) when (im1 == :reg and name2 == :identifier) do
+		[{"counter",counter}] = Table.get pid,"counter" 
+		Table.update pid,"counter",counter+6
+		6
+	end
+	defp for_cmp({type1,im1},{type2,name2,offset2},pid) when (im1 == :reg and name2 == :prefix) do
+		[{"counter",counter}] = Table.get pid,"counter" 
+		Table.update pid,"counter",counter+4+offset2
+		4+offset2
+	end
+	defp for_cmp({type1,im1},{type2,name2,offset2},pid) when (im1 == :reg and name2 == :equation) do
+		[{"counter",counter}] = Table.get pid,"counter" 
+		Table.update pid,"counter",counter+3+offset2
+		3+offset2
+	end
+	defp for_xor({type1,name1,offset1},{type2,name2,offset2},pid) when (name1 == :equation and name2 == :hexadecimal)do
+		if (type2 == :byte) do
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+4+offset1
+			4+offset1
+		else
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+7+offset1
+			7+offset1
+		end
+	end
+	defp for_xor({type1,name1,offset1},{type2,name2,offset2},pid) when (name1 == :prefix and name2 == :hexadecimal)do
+		if (type2 == :byte) do
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+5+offset1
+			5+offset1
+		else
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+7+offset1
+			8+offset1
+		end
+	end
+	defp for_xor({type1,name1,offset1},{type2,name2,offset2},pid) when (name1 == :equation and name2 == :const)do
+		if (type2 == :byte) do
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+4+offset1
+			4+offset1
+		else
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+7+offset1
+			7+offset1
+		end
+	end
+	defp for_xor({type1,name1,offset1},{type2,name2,offset2},pid) when (name1 == :prefix and name2 == :const)do
+		if (type2 == :byte) do
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+5+offset1
+			5+offset1
+		else
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+7+offset1
+			8+offset1
+		end
+	end
+	defp for_xor({type1,name1,offset1},{type2,name2,offset2},pid) when (name1 == :equation and name2 == :string)do
+		if (type2 == :byte) do
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+5+offset1
+			5+offset1
+		else
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+7+offset1
+			8+offset1
+		end
+	end
+	defp for_xor({type1,name1,offset1},{type2,name2,offset2},pid) when (name1 == :prefix and name2 == :string)do
+		if (type2 == :byte) do
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+5+offset1
+			5+offset1
+		else
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+7+offset1
+			8+offset1
+		end
+	end
+	defp for_xor({type1,name1,offset1},{type2,name2,offset2},pid) when (name1 == :identifier and name2 == :string)do
+		case type1 do
+			:byte-> 
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+7
+			7
+			:word-> if(type2 == :byte)do
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+8
+			8
+			else
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+9
+			9
+			end
+			:dword->
+			case type2 do
+				:byte-> 
+					[{"counter",counter}] = Table.get pid,"counter" 
+					Table.update pid,"counter",counter+7
+					7
+				:word-> 
+					[{"counter",counter}] = Table.get pid,"counter" 
+					Table.update pid,"counter",counter+10
+					10
+				:dword-> 
+					[{"counter",counter}] = Table.get pid,"counter" 
+					Table.update pid,"counter",counter+10
+					10
+			end
+		end
+	end
+	defp for_xor({type1,name1,offset1},{type2,name2,offset2},pid) when (name1 == :identifier and name2 == :hexadecimal)do
+		case type1 do
+			:byte-> 
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+7
+			7
+			:word-> if(type2 == :byte)do
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+8
+			8
+			else
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+9
+			9
+			end
+			:dword->
+			case type2 do
+				:byte-> 
+					[{"counter",counter}] = Table.get pid,"counter" 
+					Table.update pid,"counter",counter+7
+					7
+				:word-> 
+					[{"counter",counter}] = Table.get pid,"counter" 
+					Table.update pid,"counter",counter+10
+					10
+				:dword-> 
+					[{"counter",counter}] = Table.get pid,"counter" 
+					Table.update pid,"counter",counter+10
+					10
+			end
+		end
+	end
+	defp for_xor({type1,name1,offset1},{type2,name2,offset2},pid) when (name1 == :identifier and name2 == :const)do
+		case type1 do
+			:byte-> 
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+7
+			7
+			:word-> if(type2 == :byte)do
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+8
+			8
+			else
+			[{"counter",counter}] = Table.get pid,"counter" 
+			Table.update pid,"counter",counter+9
+			9
+			end
+			:dword->
+			case type2 do
+				:byte-> 
+					[{"counter",counter}] = Table.get pid,"counter" 
+					Table.update pid,"counter",counter+7
+					7
+				:word-> 
+					[{"counter",counter}] = Table.get pid,"counter" 
+					Table.update pid,"counter",counter+10
+					10
+				:dword-> 
+					[{"counter",counter}] = Table.get pid,"counter" 
+					Table.update pid,"counter",counter+10
+					10
+			end
+		end
+	end
+	defp file(path) do
+		{atom, pid} = File.open path,[:utf8]
+		acc = case atom do
+			:error -> IO.puts "error"
+			:ok -> fileHandle pid,[]
+		end
+		acc
+	end
+	defp fileHandle(pid,acc) do
+		string = IO.read pid,:line
+		case string do
+			:eof -> File.close pid
+			acc
+			_ ->
+				string = Regex.replace(~r/\t/,string,"", global: true)
+				|>String.trim_trailing()
+				|> (&Regex.split(~r{\ },&1)).()
+				[h|t] = string
+				fileHandle(pid,acc++[%{type: t,allowed: h}])
+		end
+	end
+	#TODO this function gets explicit type and returns abstract typename (like imm or reg)
+	defp make_implicit(atom) do
+		string = to_string(atom)
+		map = file("allowed.md")
+		found = Enum.find map,fn(x)-> string in x.type end
+		if(found == :nil)do
+			:false
+		else
+			String.to_atom(found.allowed)
+		end
+	end
+	#checking operands
+	#TODO const will return :type type
 	defp op_check(operand,pid) when (length(operand) == 3) do
 		[fst|[sec|[thd]]] = operand
 		if(fst.type == "size_type" && sec.type == "operator")do
 			case fst.name do
 				"byte" ->
 					case thd.type do
-					   "equation" -> if(equation_check(thd.name))do
-					   	{:byte,:equation}
-					   	else
-					   	{:err,:false}
-					   end
-					   "prefix" ->if(equation_check(thd.name))do
-					   	{:byte,:prefix}
-					   	else
-					   	{:err,:false}
-					   end
-					   "identifier"->
-					   	list = Table.get pid,"var"
-						list = Enum.filter(list,fn({"var",val})-> val == fst.name end)
-						if(length(list) == 0)do
-						{:byte,:identifier}
-						else
-						{:err,:false}
-						end
-					   _ -> {:err,:false}
+					   "equation" -> equation_check(thd.name,:byte)
+					   "prefix" ->prefix_check(thd.name,:byte)
+					   "identifier"->{:byte,:identifier,0}
+					   _ -> {:err,:false,0}
 					end
 				"word" ->
 					case thd.type do
-					   "equation" -> if(equation_check(thd.name))do
-					   	{:word,:equation}
-					   	else
-					   	{:err,:false}
-					   end
-					   "prefix" ->if(prefix_check(thd.name))do
-					   	{:word,:prefix}
-					   	else
-					   	{:err,:false}
-					   end
-					   "identifier"->
-					   	list = Table.get pid,"var"
-						list = Enum.filter(list,fn({"var",val})-> val == fst.name end)
-						if(length(list) == 0)do
-						{:word,:identifier}
-						else
-						{:err,:false}
-						end
-					   _ -> {:err,:false}
+					   "equation" -> equation_check(thd.name,:dword)
+					   "prefix" ->prefix_check(thd.name)
+					   "identifier"->{:word,:identifier,0}
+					   _ -> {:err,:false,0}
 					end
 				"dword" ->
 					case thd.type do
-					   "equation" -> if(equation_check(thd.name))do
-					   	{:dword,:equation}
-					   	else
-					   	{:err,:false}
-					   end
-					   "prefix" ->if(prefix_check(thd.name))do
-					   	{:dword,:prefix}
-					   	else
-					   	{:err,:false}
-					   end
-					   "identifier"->
-					   	list = Table.get pid,"var"
-						list = Enum.filter(list,fn({"var",val})-> val == fst.name end)
-						if(length(list) == 0)do
-						{:byte,:identifier}
-						else
-						{:err,:false}
-						end
-					   _ -> {:err,:false}
+					   "equation" -> equation_check(thd.name,:dword)
+					   "prefix" ->prefix_check(thd.name,:dword)
+					   "identifier"->{:dword,:identifier,0}
+					   _ -> {:err,:false,0}
 					end
-				_ -> {:err,:false}
+				_ -> {:err,:false,0}
 			end
 		else
-			{:err,:false}
+			{:err,:false,0}
 		end
 	end
 	defp op_check(operand,pid) when (length(operand) == 1) do
 		[lol] = operand
 		case lol.type do
-			"equation" -> if(equation_check(lol.name))do
-			   	{:type,:equation}
-			   	else
-			   	{:err,:false}
-			   end
-			"prefix" -> if(equation_check(lol.name))do
-				{:type,:prefix}
-			   	else
-			   	{:err,:false}
-			   end
-			"reg8" -> {:reg,:reg8}
-			"reg32" -> {:reg,:reg32}
-			"hexadecimal" ->{:type,:hexadecimal}
-			"string" -> {:type,:string}
-			"const" -> {:type,:const}
-			"identifier"->{:type,:identifier}
-			_ -> {:err,:false}
+			"equation" -> equation_check(lol.name)
+			"prefix" -> prefix_check(lol.name)
+			"reg8" -> {:reg,:reg8,0}
+			"reg32" -> {:reg,:reg32,0}
+			"hexadecimal" ->h_check(lol.name)
+			"string" -> str_ch(lol.name)
+			"const" -> const_check(lol.name,pid)
+			"identifier"->name_check(lol.name,pid)
+			"label"->{:type,:label,0}
+			_ -> {:err,:false,0}
 		end
 	end
 	defp op_check(operand,pid)do
 		{:err,:false}
 	end
-	defp equation_check([eq])do
-		list = Regex.split(~r{(\[|\]|\+|\*)},eq,include_captures: true, trim: true)
-		allowed = ["eax","ebx","ecx","edx","esi","ebp","esp"]
-		used = ["[","]","+","+","*"]
-		mult = ["2h","4h","8h"]
-		IO.inspect eq,label: "eq"
-		numbers = Enum.filter(list, fn(x) ->
-			base = byte_size(x)-1
-			last = binary_part(x,base,byte_size(x)-base)
-			last == "h"
-		 end)
-		if(length(numbers) == 2)do
-				[first|[second]] = numbers
-				if(first in mult && length(String.codepoints(second)) <= 10)do
-					golist(list,allowed,used)
-					else
-					false
-				end
-			else
-				false
+	defp name_check(thing,pid)do
+		list = Table.get pid,"identifier"
+		[{"identifier",{^thing,value}}] = Enum.filter(list, fn({_,{name,value}})-> name==thing end)
+		type = case value.type do
+			"db"->:byte
+			"dw"->:word
+			"dd"->:word
+		end
+		{type,:identifier,0}
+	end
+	defp const_check(thing,pid)do
+		list = Table.get pid,"identifier"
+		lst = Enum.filter(list, fn({_,{name,_}})-> name == thing end)
+		{"identifier",{^thing,map}} = List.last(lst)
+		case map.type do
+			"string"->str_ch(map.name,:const)
+			"hexadecimal"->h_check(map.name,:const)
 		end
 	end
-	defp equation_check(eq)do
-		list = Regex.split(~r{\:},eq)
-		case length(list) do
-			1->equation_check(list)
-			2->prefix_check(list)
-		end
-	end
-	defp golist([],_,[])do
-		true
-	end
-	defp golist([],_,[smt])do
-		false
-	end
-	defp golist([head|tail],allowed,used)do
-		base = byte_size(head)-1
-		hex = String.codepoints(binary_part(head, 0, base))
+	defp str_ch(string,type \\ :string)do
 		cond do
-			(head in used)->golist(tail,allowed,List.delete(used, head))
-			(head in allowed)->golist(tail,allowed,used)
-			(Dictionary.checkHex(hex))->golist(tail,allowed,used)
-			true->false
+			String.length(string)<=4->{:byte,type,0}
+			(String.length(string)>4 and String.length(string)<=6)->{:word,type,0}
 		end
 	end
-	defp prefix_check([seg|[eq]])do
-		segments = ["cs","ds","ss","es","fs","gs"]
-		if(seg in segments)do
-			equation_check(eq)
-		else
-			false
+	defp h_check(string,type \\ :hexadecimal)do
+		cond do
+			String.length(string)<=3->{:byte,type,0}
+			(String.length(string)>3 and String.length(string)<=5)->{:word,type,0}
+			(String.length(string)>5 and String.length(string)<=7)->{:dword,type,0}
 		end
+	end
+	defp string_offset(eq,type \\ :type)do
+		list = Regex.split ~r{(\[|\+|\*|\])},eq,trim: :true
+		lst = List.last(list)
+		cond do
+			String.length(lst)<=2->offset = 1
+			(String.length(lst)>2 and String.length(lst)<=4)->offset=2
+			(String.length(lst)>4 and String.length(lst)<=6)->offset=4
+		end
+		{type,:equation,offset}
+	end
+	defp equation_check(eq,type \\ :type)do
+		list = Regex.split ~r{(\[|\+|\*|\])},eq,trim: :true
+		lst = List.last(list)
+		cond do
+			String.length(lst)<=2->offset = 1
+			(String.length(lst)>2 and String.length(lst)<=4)->offset=2
+			(String.length(lst)>4 and String.length(lst)<=6)->offset=4
+		end
+		{type,:equation,offset}
+	end
+	defp prefix_check(eq,type \\ :type)do
+		[seg|tail] = Regex.split(~r{\:},eq)
+		case seg do
+			"ss"->ss_check(tail,type)
+			"ds"->ds_check(tail,type)
+			_->pr_check(tail,type)
+		end		
+	end
+	defp pr_check([eq],type)do
+		list = Regex.split ~r{(\[|\+|\*|\])},eq,trim: :true
+		lst = List.last(list)
+		cond do
+			String.length(lst)<=2->offset = 1
+			(String.length(lst)>2 and String.length(lst)<=4)->offset=2
+			(String.length(lst)>4 and String.length(lst)<=6)->offset=4
+		end
+		{type,:prefix,offset}
+	end
+	defp ss_check([eq],type)do
+		allowed = ["ebp","esp"]
+		list = Regex.split ~r{(\[|\+|\*|\])},eq,trim: :true
+		lst = List.last(list)
+		reg = Enum.filter list,fn(x)-> x in allowed end
+		cond do
+			String.length(lst)<=2->offset = 1
+			(String.length(lst)>2 and String.length(lst)<=4)->offset=2
+			(String.length(lst)>4 and String.length(lst)<=6)->offset=4
+		end
+			if (reg != 0)do
+				{type,:prefix,offset}
+			else
+				{type,:equation,offset}
+			end
+	end
+	defp ds_check([eq],type)do
+		allowed = ["eax","ebx","edx","ecx","esi","edi"]
+		list = Regex.split ~r{(\[|\+|\*|\])},eq,trim: :true
+		lst = List.last(list)
+		reg = Enum.filter list,fn(x)-> x in allowed end
+		cond do
+			String.length(lst)<=2->offset = 1
+			(String.length(lst)>2 and String.length(lst)<=4)->offset=2
+			(String.length(lst)>4 and String.length(lst)<=6)->offset=4
+		end
+			if (reg != 0)do
+				{type,:prefix,offset}
+			else
+				{type,:equation,offset}
+			end
 	end
 end

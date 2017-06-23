@@ -43,6 +43,9 @@ defmodule Syntax do
 	defp id_check(string,pid) when (length(string) == 1)do
 		first = List.first(string)
 		if(first.type == "label") do
+				base = byte_size(first.name)-1
+				name = binary_part(first.name, 0, base)
+				Table.put(pid,"identifier",{name,first})
 				{:true,"smth"}
 			else
 				Table.put(pid,"error",first.string)
@@ -55,6 +58,7 @@ defmodule Syntax do
 			list = Table.get pid,"segment"
 			list = Enum.filter(list,fn({_,{{name,state},_}})-> name == first.name && state == "start" end)
 			if(length(list) == 0)do
+			Table.put pid,"identifier",{first.name,first.string}
 			Table.put pid,"segment",{{first.name,"start"},first.string}
 			{:true,"smth"}
 			else
@@ -63,6 +67,7 @@ defmodule Syntax do
 			end
 		else
 			if(first.type == "seg_identifier" && second.name == "ends")do
+			Table.put pid,"identifier",{first.name,first.string}
 			list = Table.get pid,"segment"
 			list = Enum.filter(list,fn({_,{{name,state},_}})-> name == first.name && state == "end" end)
 			if(length(list) == 0)do
@@ -86,6 +91,7 @@ defmodule Syntax do
 				list = Table.get pid,"var"
 				list = Enum.filter(list,fn({"var",val})-> val == first.name end)
 				if(length(list) == 0)do
+				Table.put(pid,first.type,{first.name,%{third|type: "db"}})
 				Table.put pid,"var",first.name
 				{:true,"smth"}
 				else
@@ -100,6 +106,7 @@ defmodule Syntax do
 				list = Table.get pid,"var"
 				list = Enum.filter(list,fn({"var",val})-> val == first.name end)
 				if(length(list) == 0)do
+				Table.put(pid,first.type,{first.name,%{third|type: "dw"}})
 				Table.put pid,"var",first.name
 				{:true,"smth"}
 				else
@@ -114,6 +121,7 @@ defmodule Syntax do
 				list = Table.get pid,"var"
 				list = Enum.filter(list,fn({"var",val})-> val == first.name end)
 				if(length(list) == 0)do
+				Table.put(pid,first.type,{first.name,%{third|type: "dd"}})
 				Table.put pid,"var",first.name
 				{:true,"smth"}
 				else
@@ -124,14 +132,26 @@ defmodule Syntax do
 				Table.put(pid,"error",first.string)
 				{:false,"type error"}
 			end
-			"="-> if(third.type == "hexadecimal") do
-				Table.put(pid,"const",{first.name,third.name})
-				{:true,"smth"}
-			else
+			"="-> 
+				case third.type do
+					"hexadecimal"->
+						Table.put(pid,"identifier",{first.name,third})
+						Table.put(pid,"const",{first.name,third.name})
+						{:true,"smth"}
+					"string"-> if(String.length(third.name)<=6)do
+						Table.put(pid,"identifier",{first.name,third})
+						Table.put(pid,"const",{first.name,third.name})
+						{:true,"smth"}
+						else
+							Table.put(pid,"error",first.string)
+							{:false,"type error"}
+						end
+					_->
+						Table.put(pid,"error",first.string)
+						{:false,"type error"}
+				end
+			_->
 				Table.put(pid,"error",first.string)
-				{:false,"type error"}
-			end
-				_->Table.put(pid,"error",first.string)
 				{:false,"type error"}
 		end
 	end
@@ -245,6 +265,15 @@ defmodule Syntax do
 		{type2,name2} = op_check(last,pid)
 		im1 = make_implicit(name1)
 		im2 = make_implicit(name2)
+		#IO.inspect command,label: "command"
+		#IO.inspect first,label: "first"
+		#IO.inspect name1,label: "name1"
+		#IO.inspect type1,label: "type1"
+		#IO.inspect im1,label: "im1"
+		#IO.inspect last,label: "last"
+		#IO.inspect name2,label: "name2"
+		#IO.inspect type2,label: "type2"
+		#IO.inspect im2,label: "im2"
 		synt = file("syntax.md")
 		wew = Enum.find synt,fn(x)-> (x.type == [im1,im2] and x.allowed == command.name) end
 		if(wew == :nil)do
@@ -259,9 +288,15 @@ defmodule Syntax do
 					Table.put(pid,"error",command.string)
 					{:false,"type error"}
 				true-> 
-				if(command.name == "xor" and (type1 == :type || type2 == :type))do
-					Table.put(pid,"error",command.string)
-					{:false,"type error"}
+				if(command.name == "xor")do
+					case type2 do
+						:string->Table.put(pid,"error",command.string)
+								{:false,"type error"}
+						:label->
+							Table.put(pid,"error",command.string)
+							{:false,"phase error between passes"}
+						_->{:true,"smth"}
+					end
 				else
 					{:true,"smth"}
 				end
@@ -277,6 +312,15 @@ defmodule Syntax do
 	defp check_types(type1,type2) when (type1 == type2) do
 		:true
 	end
+	defp check_types(type1,type2) when (type1 == :type and type2 == :word) do
+		:warning
+	end
+	defp check_types(type1,type2) when (type1 == :type and type2 == :dword) do
+		:true
+	end
+	defp check_types(type1,type2) when (type1 == :type and type2 == :byte) do
+		:warning
+	end
 	defp check_types(type1,type2) when ((type1 == :reg or type2 == :reg)and(type1 == :type or type2 == :type)) do
 		:warning
 	end
@@ -288,6 +332,18 @@ defmodule Syntax do
 	end
 	defp check_types(type1,type2) when (type1 == :reg or type2 == :reg) do
 		:warning
+	end
+	defp check_types(type1,type2) when (type1 == :byte and type2 == :byte) do
+		:true
+	end
+	defp check_types(type1,type2) when (type1 == :word and type2 == :byte) do
+		:true
+	end
+	defp check_types(type1,type2) when (type1 == :dword and type2 == :byte) do
+		:true
+	end
+	defp check_types(type1,type2) when (type1 == :dword and type2 == :word) do
+		:true
 	end
 	defp check_types(type1,type2) when (type1 != type2) do
 		:false
@@ -381,7 +437,7 @@ defmodule Syntax do
 					   	else
 					   	{:err,:false}
 					   end
-					   "prefix" ->if(prefix_check(thd.name))do
+					   "prefix" ->if(equation_check(thd.name))do
 					   	{:dword,:prefix}
 					   	else
 					   	{:err,:false}
@@ -390,7 +446,7 @@ defmodule Syntax do
 					   	list = Table.get pid,"var"
 						list = Enum.filter(list,fn({"var",val})-> val == fst.name end)
 						if(length(list) == 0)do
-						{:byte,:identifier}
+						{:dword,:identifier}
 						else
 						{:err,:false}
 						end
@@ -417,22 +473,38 @@ defmodule Syntax do
 			   end
 			"reg8" -> {:reg,:reg8}
 			"reg32" -> {:reg,:reg32}
-			"hexadecimal" ->{:type,:hexadecimal}
+			"hexadecimal" ->check_hex(lol.name)
 			"string" -> {:type,:string}
-			"const" -> {:type,:const}
+			"const" ->check_const(lol.name,pid)
 			"identifier"->{:type,:identifier}
+			"label"->{:type,:label}
 			_ -> {:err,:false}
 		end
 	end
 	defp op_check(operand,pid)do
 		{:err,:false}
 	end
+	defp check_const(const,pid)do
+		list = Table.get pid,"const"
+		values = Enum.filter(list,fn({_,{name,_}})->name == const end)
+		{"const",{name,value}} = List.last(values)
+		base = byte_size(value)-1
+		hex = String.codepoints(binary_part(value, 0, base))
+		if(Dictionary.checkHex(hex))do
+			check_hex(value)
+		else
+			cond do
+				(String.length(value)<=3)->{:byte,:string}
+				(String.length(value)>3 and String.length(value)<=5)->{:word,:string}
+				true->{:err,:false}
+			end
+		end
+	end
 	defp equation_check([eq])do
 		list = Regex.split(~r{(\[|\]|\+|\*)},eq,include_captures: true, trim: true)
 		allowed = ["eax","ebx","ecx","edx","esi","ebp","esp"]
 		used = ["[","]","+","+","*"]
 		mult = ["2h","4h","8h"]
-		IO.inspect eq,label: "eq"
 		numbers = Enum.filter(list, fn(x) ->
 			base = byte_size(x)-1
 			last = binary_part(x,base,byte_size(x)-base)
@@ -447,6 +519,13 @@ defmodule Syntax do
 				end
 			else
 				false
+		end
+	end
+	defp check_hex(hex)do
+		cond do
+			(String.length(hex)<=3)->{:byte,:hexadecimal}
+			(String.length(hex)>3 and String.length(hex)<=5)->{:word,:hexadecimal}
+			(String.length(hex)>5 and String.length(hex)<=7)->{:dword,:hexadecimal}
 		end
 	end
 	defp equation_check(eq)do
