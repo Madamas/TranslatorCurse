@@ -8,8 +8,9 @@ defmodule MyCurse do
 		lex = Dictionary.const_correct lex,pid
 		sendMidData lex
 		{what,pid} = Syntax.check_syntax(lex)
-		#IO.inspect lex
-		Semantics.count_bytes(what,pid)
+		what = Semantics.count_bytes(what,pid)
+		#IO.inspect what,label: "what"
+		Print.listing(what,pid)
 		#Syntax.align_intervals what,pid
 		#Table.get pid,"error"
 		#lex

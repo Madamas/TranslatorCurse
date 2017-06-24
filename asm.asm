@@ -35,14 +35,12 @@ Code segment
 	xor dwvar,kvar
 	xor byte ptr dwvar,kvar
 	xor dword ptr dwvar,kvar
-	xor dword ptr gs:[ebx*4h+ebx+66666h],22h
 	;xor dwvar,labl1
 	;mov al, vars
 	;mov al, dwvar
 	xor gs:[ebx*4h+ebx+6h],2222h
 	xchg ddVar,al
 	xchg ddVar,eax
-	xchg dwvar,eax
 	xchg dword ptr ddVar,al
 	xchg byte ptr ddVar,eax
 	xchg [ebx*4h+ebx+6h], al
@@ -50,21 +48,6 @@ Code segment
 	xchg byte ptr es:[ebx*4h+ebx+6h], ecx
 	xchg es:[ebx*4h+ebx+6h], al
 	xchg ds:[ebx*4h+ebx+6h], ecx
-	xchg ds:[ebp*4h+ebx+6h], ecx
-	xchg ds:[ebp*4h+esp+6h], ecx
-	xchg ds:[ebx*4h+ebx+6h], al
-	xchg cs:[ebx*4h+ebx+6h], ecx
-	xchg cs:[ebx*4h+ebx+6h], al
-	xchg ss:[ebp*4h+ebp+6h], ecx
-	xchg ss:[ebx*4h+ebp+6h], ecx
-	xchg ss:[ebx*4h+eax+6h], ecx
-	xchg ss:[esi*4h+esi+6h], al
-	xchg ss:[esi*4h+esi+6h], ecx
-	xchg ss:[ebp*4h+ebp+6h], al
-	xchg fs:[ebx*4h+ebx+6h], ecx
-	xchg fs:[ebx*4h+ebx+6h], al
-	xchg gs:[ebx*4h+ebx+6h], ecx
-	xchg gs:[ebx*4h+ebx+6h], al
 	xchg byte ptr [ebx*4h+ebx+66666h], al
 	xchg dword ptr [ebp*4h+eax+6h], ecx
 	xchg byte ptr [ebx*4h+ebx+6h], ecx
@@ -79,7 +62,6 @@ Code segment
 	xor byte ptr dwvar,"2"
 	xor dword ptr dwvar,kvar
 	xor dword ptr dwvar,"22"
-	xor dword ptr dwvar,"222"
 	xor dword ptr gs:[ebx*4h+ebx+66h],22h
 	xor dword ptr gs:[ebx*4h+ebx+66h],"2"
 	cmp al,ddVar

@@ -75,7 +75,7 @@ defmodule Dictionary do
 							Table.put(pid,first.type,{first.name,third})
 						_-> :nil
 					end
-				_->
+				_-> :nil
 			end
 		end
 		{lex,pid}

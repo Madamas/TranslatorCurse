@@ -19,8 +19,11 @@ Elixir.Table.beam: table.ex
 Elixir.Semantics.beam: semantics.ex
 	elixirc semantics.ex
 
+Elixir.Print.beam: print.ex
+	elixirc print.ex
+
 clean:
 	rm -rvf $(TARGET) *.beam
 
-$(TARGET): Elixir.MyCurse.beam Elixir.Dictionary.beam Elixir.Syntax.beam Elixir.Table.beam Elixir.Semantics.beam
+$(TARGET): Elixir.MyCurse.beam Elixir.Dictionary.beam Elixir.Syntax.beam Elixir.Table.beam Elixir.Semantics.beam Elixir.Print.beam
 	iex

@@ -14,10 +14,12 @@ defmodule Semantics do
 					case first.name do
 						"jcxz"->
 						[{"counter",counter}] = Table.get pid,"counter" 
-						Table.update pid,"counter",counter+2
+						Table.update pid,"counter",counter+3
+						counter
 						"cli"-> 
 						[{"counter",counter}] = Table.get pid,"counter" 
 						Table.update pid,"counter",counter+1
+						counter
 						_-> type_check(Enum.split_while(tail, fn(x)-> x.name != "," end),pid)
 					end
 				_-> 0
@@ -35,14 +37,16 @@ defmodule Semantics do
 				#wut - lex
 	defp align([h|t],[head|tail],acc)do		
 		[{flag,fk}|tl] = head
-		align(t,tail,acc++[[[{flag,h}|tl]|head]])
+		align(t,tail,acc++[[[{flag,fk,h}|tl]|head]])
 	end
 	defp id_check(string,pid) when (length(string) == 1)do
 		first = List.first(string)
 		if(first.type == "label") do
-				0
+				[{"counter",counter}] = Table.get pid,"counter" 
+				counter
 			else
-				0
+				[{"counter",counter}] = Table.get pid,"counter" 
+				counter
 			end
 	end
 	defp id_check(string,pid) when (length(string) == 2)do
@@ -52,8 +56,9 @@ defmodule Semantics do
 			0
 		else
 			if(first.type == "seg_identifier" && second.name == "ends")do
+			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.delete pid,"counter"
-			0
+			counter
 			end
 		end
 	end
@@ -66,22 +71,23 @@ defmodule Semantics do
 					"string"->
 						[{"counter",counter}] = Table.get pid,"counter" 
 						Table.update pid,"counter",counter+String.length(third.name)-2
-						String.length(third.name)-2
+						counter
 					"hexadecimal"->
 						[{"counter",counter}] = Table.get pid,"counter" 
 						Table.update pid,"counter",counter+1
-						1
+						counter
 				end
 			"dw"-> 
 				[{"counter",counter}] = Table.get pid,"counter" 
 				Table.update pid,"counter",counter+2
-				2
+				counter
 			"dd"->
 				[{"counter",counter}] = Table.get pid,"counter" 
-				Table.update pid,"counter",counter+2 
-				4
+				Table.update pid,"counter",counter+4
+				counter
 			"="-> 
-				0
+				[{"counter",counter}] = Table.get pid,"counter"
+				counter
 		end
 	end
 	defp id_check(string,pid)do
@@ -94,11 +100,11 @@ defmodule Semantics do
 			"idiv"-> 
 				[{"counter",counter}] = Table.get pid,"counter" 
 				Table.update pid,"counter",counter+2
-				2
+				counter
 			"int"-> 
 				[{"counter",counter}] = Table.get pid,"counter" 
 				Table.update pid,"counter",counter+2
-				2
+				counter
 			_-> Table.put(pid,"error",third.string)
 				{:false,"type error"}
 		end
@@ -112,17 +118,17 @@ defmodule Semantics do
 			"idiv"-> 
 				[{"counter",counter}] = Table.get pid,"counter" 
 				Table.update pid,"counter",counter+2
-				2
+				counter
 			"int"-> 
 			case first.name do
 				"3"->
 				[{"counter",counter}] = Table.get pid,"counter" 
 				Table.update pid,"counter",counter+1
-				1
+				counter
 				_->
 				[{"counter",counter}] = Table.get pid,"counter" 
 				Table.update pid,"counter",counter+2
-				2
+				counter
 			end			
 			_-> 0
 		end
@@ -138,7 +144,7 @@ defmodule Semantics do
 		wew = Enum.find synt,fn(x)-> (x.type == [im1,im2] and x.allowed == command.name) end
 		case command.name do
 			"mov"->for_mov({type1,name1},{type2,im2},pid)
-			"xchg"->for_xchg({type1,name1,offset1},{type2,im2},pid)
+			"xchg"->for_xchg({type1,name1,offset1},{type2,im2,name2},pid)
 			"cmp"->for_cmp({type1,im1},{type2,name2,offset2},pid)
 			"xor"->for_xor({type1,name1,offset1},{type2,name2,offset2},pid)
 			_->0
@@ -147,127 +153,127 @@ defmodule Semantics do
 	defp for_mov({type1,name1},{type2,name2},pid) when (name1 == :reg32 and name2 == :reg) do
 		[{"counter",counter}] = Table.get pid,"counter" 
 		Table.update pid,"counter",counter+2
-		2
+		counter
 	end
 	defp for_mov({type1,name1},{type2,name2},pid) when (name1 == :reg32 and name2 == :reg) do
 		[{"counter",counter}] = Table.get pid,"counter" 
 		Table.update pid,"counter",counter+2
-		2
+		counter
 	end
 	defp for_mov({type1,name1},{type2,name2},pid) when (name1 == :reg8 and name2 == :reg) do
 		[{"counter",counter}] = Table.get pid,"counter" 
 		Table.update pid,"counter",counter+2
-		2
+		counter
 	end
 	defp for_mov({type1,name1},{type2,name2},pid) when (name1 == :reg8 and name2 == :reg) do
 		[{"counter",counter}] = Table.get pid,"counter" 
 		Table.update pid,"counter",counter+2
-		2
+		counter
 	end
 	defp for_mov({type1,name1},{type2,name2},pid) when (name1 == :reg32 and name2 == :imm) do
 		[{"counter",counter}] = Table.get pid,"counter" 
 		Table.update pid,"counter",counter+5
-		5
+		counter
 	end
 	defp for_mov({type1,name1},{type2,name2},pid) when (name1 == :reg8 and name2 == :imm) do
 		[{"counter",counter}] = Table.get pid,"counter" 
 		Table.update pid,"counter",counter+2
-		2
+		counter
 	end
-	defp for_xchg({type1,name1,offset1},{type2,im2},pid) when (name1 == :identifier and im2 == :reg) do
+	defp for_xchg({type1,name1,offset1},{type2,im2,name2},pid) when (name1 == :identifier and im2 == :reg) do
 		[{"counter",counter}] = Table.get pid,"counter" 
 		Table.update pid,"counter",counter+6
-		6
+		counter
 	end
-	defp for_xchg({type1,name1,offset1},{type2,im2},pid) when (name1 == :equation and im2 == :reg) do
+	defp for_xchg({type1,name1,offset1},{type2,im2,name2},pid) when (name1 == :equation and im2 == :reg) do
 		[{"counter",counter}] = Table.get pid,"counter" 
 		Table.update pid,"counter",counter+3+offset1
-		3+offset1
+		counter
 	end
-	defp for_xchg({type1,name1,offset1},{type2,im2},pid) when (name1 == :prefix and im2 == :reg) do
+	defp for_xchg({type1,name1,offset1},{type2,im2,name2},pid) when (name1 == :prefix and im2 == :reg) do
 		[{"counter",counter}] = Table.get pid,"counter" 
 		Table.update pid,"counter",counter+4+offset1
-		4+offset1
+		counter
 	end
 	defp for_cmp({type1,im1},{type2,name2,offset2},pid) when (im1 == :reg and name2 == :identifier) do
 		[{"counter",counter}] = Table.get pid,"counter" 
 		Table.update pid,"counter",counter+6
-		6
+		counter
 	end
 	defp for_cmp({type1,im1},{type2,name2,offset2},pid) when (im1 == :reg and name2 == :prefix) do
 		[{"counter",counter}] = Table.get pid,"counter" 
 		Table.update pid,"counter",counter+4+offset2
-		4+offset2
+		counter
 	end
 	defp for_cmp({type1,im1},{type2,name2,offset2},pid) when (im1 == :reg and name2 == :equation) do
 		[{"counter",counter}] = Table.get pid,"counter" 
 		Table.update pid,"counter",counter+3+offset2
-		3+offset2
+		counter
 	end
 	defp for_xor({type1,name1,offset1},{type2,name2,offset2},pid) when (name1 == :equation and name2 == :hexadecimal)do
 		if (type2 == :byte) do
 			[{"counter",counter}] = Table.get pid,"counter" 
-			Table.update pid,"counter",counter+4+offset1
-			4+offset1
+			Table.update pid,"counter",counter+5+offset1
+			counter
 		else
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+7+offset1
-			7+offset1
+			counter
 		end
 	end
 	defp for_xor({type1,name1,offset1},{type2,name2,offset2},pid) when (name1 == :prefix and name2 == :hexadecimal)do
 		if (type2 == :byte) do
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+5+offset1
-			5+offset1
+			counter
 		else
 			[{"counter",counter}] = Table.get pid,"counter" 
-			Table.update pid,"counter",counter+7+offset1
-			8+offset1
+			Table.update pid,"counter",counter+8+offset1
+			counter
 		end
 	end
 	defp for_xor({type1,name1,offset1},{type2,name2,offset2},pid) when (name1 == :equation and name2 == :const)do
 		if (type2 == :byte) do
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+4+offset1
-			4+offset1
+			counter
 		else
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+7+offset1
-			7+offset1
+			counter
 		end
 	end
 	defp for_xor({type1,name1,offset1},{type2,name2,offset2},pid) when (name1 == :prefix and name2 == :const)do
 		if (type2 == :byte) do
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+5+offset1
-			5+offset1
+			counter
 		else
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+7+offset1
-			8+offset1
+			counter
 		end
 	end
 	defp for_xor({type1,name1,offset1},{type2,name2,offset2},pid) when (name1 == :equation and name2 == :string)do
 		if (type2 == :byte) do
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+5+offset1
-			5+offset1
+			counter
 		else
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+7+offset1
-			8+offset1
+			counter
 		end
 	end
 	defp for_xor({type1,name1,offset1},{type2,name2,offset2},pid) when (name1 == :prefix and name2 == :string)do
 		if (type2 == :byte) do
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+5+offset1
-			5+offset1
+			counter
 		else
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+7+offset1
-			8+offset1
+			counter
 		end
 	end
 	defp for_xor({type1,name1,offset1},{type2,name2,offset2},pid) when (name1 == :identifier and name2 == :string)do
@@ -275,30 +281,30 @@ defmodule Semantics do
 			:byte-> 
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+7
-			7
+			counter
 			:word-> if(type2 == :byte)do
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+8
-			8
+			counter
 			else
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+9
-			9
+			counter
 			end
 			:dword->
 			case type2 do
 				:byte-> 
 					[{"counter",counter}] = Table.get pid,"counter" 
 					Table.update pid,"counter",counter+7
-					7
+					counter
 				:word-> 
 					[{"counter",counter}] = Table.get pid,"counter" 
 					Table.update pid,"counter",counter+10
-					10
+					counter
 				:dword-> 
 					[{"counter",counter}] = Table.get pid,"counter" 
 					Table.update pid,"counter",counter+10
-					10
+					counter
 			end
 		end
 	end
@@ -307,30 +313,30 @@ defmodule Semantics do
 			:byte-> 
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+7
-			7
+			counter
 			:word-> if(type2 == :byte)do
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+8
-			8
+			counter
 			else
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+9
-			9
+			counter
 			end
 			:dword->
 			case type2 do
 				:byte-> 
 					[{"counter",counter}] = Table.get pid,"counter" 
 					Table.update pid,"counter",counter+7
-					7
+					counter
 				:word-> 
 					[{"counter",counter}] = Table.get pid,"counter" 
 					Table.update pid,"counter",counter+10
-					10
+					counter
 				:dword-> 
 					[{"counter",counter}] = Table.get pid,"counter" 
 					Table.update pid,"counter",counter+10
-					10
+					counter
 			end
 		end
 	end
@@ -339,30 +345,30 @@ defmodule Semantics do
 			:byte-> 
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+7
-			7
+			counter
 			:word-> if(type2 == :byte)do
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+8
-			8
+			counter
 			else
 			[{"counter",counter}] = Table.get pid,"counter" 
 			Table.update pid,"counter",counter+9
-			9
+			counter
 			end
 			:dword->
 			case type2 do
 				:byte-> 
 					[{"counter",counter}] = Table.get pid,"counter" 
 					Table.update pid,"counter",counter+7
-					7
+					counter
 				:word-> 
 					[{"counter",counter}] = Table.get pid,"counter" 
 					Table.update pid,"counter",counter+10
-					10
+					counter
 				:dword-> 
 					[{"counter",counter}] = Table.get pid,"counter" 
 					Table.update pid,"counter",counter+10
-					10
+					counter
 			end
 		end
 	end
@@ -455,7 +461,7 @@ defmodule Semantics do
 		type = case value.type do
 			"db"->:byte
 			"dw"->:word
-			"dd"->:word
+			"dd"->:dword
 		end
 		{type,:identifier,0}
 	end
@@ -470,24 +476,24 @@ defmodule Semantics do
 	end
 	defp str_ch(string,type \\ :string)do
 		cond do
-			String.length(string)<=4->{:byte,type,0}
-			(String.length(string)>4 and String.length(string)<=6)->{:word,type,0}
+			String.length(string)<=3->{:byte,type,0}
+			(String.length(string)>3)->{:dword,type,0}
 		end
 	end
 	defp h_check(string,type \\ :hexadecimal)do
 		cond do
 			String.length(string)<=3->{:byte,type,0}
 			(String.length(string)>3 and String.length(string)<=5)->{:word,type,0}
-			(String.length(string)>5 and String.length(string)<=7)->{:dword,type,0}
+			(String.length(string)>5 and String.length(string)<=9)->{:dword,type,0}
 		end
 	end
 	defp string_offset(eq,type \\ :type)do
 		list = Regex.split ~r{(\[|\+|\*|\])},eq,trim: :true
 		lst = List.last(list)
 		cond do
-			String.length(lst)<=2->offset = 1
-			(String.length(lst)>2 and String.length(lst)<=4)->offset=2
-			(String.length(lst)>4 and String.length(lst)<=6)->offset=4
+			String.length(lst)<=3->offset = 1
+			(String.length(lst)>3 and String.length(lst)<=5)->offset=2
+			(String.length(lst)>5)->offset=4
 		end
 		{type,:equation,offset}
 	end
@@ -495,9 +501,9 @@ defmodule Semantics do
 		list = Regex.split ~r{(\[|\+|\*|\])},eq,trim: :true
 		lst = List.last(list)
 		cond do
-			String.length(lst)<=2->offset = 1
-			(String.length(lst)>2 and String.length(lst)<=4)->offset=2
-			(String.length(lst)>4 and String.length(lst)<=6)->offset=4
+			String.length(lst)<=3->offset = 1
+			(String.length(lst)>3 and String.length(lst)<=5)->offset=2
+			(String.length(lst)>5)->offset=4
 		end
 		{type,:equation,offset}
 	end
@@ -513,9 +519,9 @@ defmodule Semantics do
 		list = Regex.split ~r{(\[|\+|\*|\])},eq,trim: :true
 		lst = List.last(list)
 		cond do
-			String.length(lst)<=2->offset = 1
-			(String.length(lst)>2 and String.length(lst)<=4)->offset=2
-			(String.length(lst)>4 and String.length(lst)<=6)->offset=4
+			String.length(lst)<=3->offset = 1
+			(String.length(lst)>3 and String.length(lst)<=5)->offset=2
+			(String.length(lst)>5)->offset=4
 		end
 		{type,:prefix,offset}
 	end
@@ -525,9 +531,9 @@ defmodule Semantics do
 		lst = List.last(list)
 		reg = Enum.filter list,fn(x)-> x in allowed end
 		cond do
-			String.length(lst)<=2->offset = 1
-			(String.length(lst)>2 and String.length(lst)<=4)->offset=2
-			(String.length(lst)>4 and String.length(lst)<=6)->offset=4
+			String.length(lst)<=3->offset = 1
+			(String.length(lst)>3 and String.length(lst)<=5)->offset=2
+			(String.length(lst)>5)->offset=4
 		end
 			if (reg != 0)do
 				{type,:prefix,offset}
@@ -541,14 +547,14 @@ defmodule Semantics do
 		lst = List.last(list)
 		reg = Enum.filter list,fn(x)-> x in allowed end
 		cond do
-			String.length(lst)<=2->offset = 1
-			(String.length(lst)>2 and String.length(lst)<=4)->offset=2
-			(String.length(lst)>4 and String.length(lst)<=6)->offset=4
+			String.length(lst)<=3->offset = 1
+			(String.length(lst)>3 and String.length(lst)<=5)->offset=2
+			(String.length(lst)>5)->offset=4
 		end
 			if (reg != 0)do
-				{type,:prefix,offset}
-			else
 				{type,:equation,offset}
+			else
+				{type,:prefix,offset}
 			end
 	end
 end

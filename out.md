@@ -143,13 +143,6 @@ dwvar identifier
 kvar const
 
 xor command
-dword size_type
-ptr operator
-gs:[ebx*4h+ebx+66666h] prefix
-, divider
-22h hexadecimal
-
-xor command
 gs:[ebx*4h+ebx+6h] prefix
 , divider
 2222h hexadecimal
@@ -165,11 +158,6 @@ ddvar identifier
 eax reg32
 
 xchg command
-dwvar identifier
-, divider
-eax reg32
-
-xchg command
 dword size_type
 ptr operator
 ddvar identifier
@@ -209,81 +197,6 @@ xchg command
 ds:[ebx*4h+ebx+6h] prefix
 , divider
 ecx reg32
-
-xchg command
-ds:[ebp*4h+ebx+6h] prefix
-, divider
-ecx reg32
-
-xchg command
-ds:[ebp*4h+esp+6h] prefix
-, divider
-ecx reg32
-
-xchg command
-ds:[ebx*4h+ebx+6h] prefix
-, divider
-al reg8
-
-xchg command
-cs:[ebx*4h+ebx+6h] prefix
-, divider
-ecx reg32
-
-xchg command
-cs:[ebx*4h+ebx+6h] prefix
-, divider
-al reg8
-
-xchg command
-ss:[ebp*4h+ebp+6h] prefix
-, divider
-ecx reg32
-
-xchg command
-ss:[ebx*4h+ebp+6h] prefix
-, divider
-ecx reg32
-
-xchg command
-ss:[ebx*4h+eax+6h] prefix
-, divider
-ecx reg32
-
-xchg command
-ss:[esi*4h+esi+6h] prefix
-, divider
-al reg8
-
-xchg command
-ss:[esi*4h+esi+6h] prefix
-, divider
-ecx reg32
-
-xchg command
-ss:[ebp*4h+ebp+6h] prefix
-, divider
-al reg8
-
-xchg command
-fs:[ebx*4h+ebx+6h] prefix
-, divider
-ecx reg32
-
-xchg command
-fs:[ebx*4h+ebx+6h] prefix
-, divider
-al reg8
-
-xchg command
-gs:[ebx*4h+ebx+6h] prefix
-, divider
-ecx reg32
-
-xchg command
-gs:[ebx*4h+ebx+6h] prefix
-, divider
-al reg8
 
 xchg command
 byte size_type
@@ -364,13 +277,6 @@ ptr operator
 dwvar identifier
 , divider
 "22" string
-
-xor command
-dword size_type
-ptr operator
-dwvar identifier
-, divider
-"222" string
 
 xor command
 dword size_type
